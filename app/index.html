@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Saving & Spending</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#3E6F5C">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --purple:#7B61FF;
+    --purple-dark:#5F46E0;
+    --purple-light:#EFEBFF;
+    --teal:#2EC4B6;
+    --teal-light:#E4FBF8;
+    --red:#FF6B6B;
+    --red-light:#FFEDED;
+    --amber:#F5A623;
+    --bg:#F7F7FB;
+    --card:#FFFFFF;
+    --text:#1F2933;
+    --text2:#6B7280;
+    --line:#ECEBF5;
+    --radius:20px;
+    --radius-sm:14px;
+    --shadow:0 10px 30px -12px rgba(31,41,51,0.12);
+    --shadow-sm:0 4px 14px -6px rgba(31,41,51,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
+  }
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select,textarea{font-family:inherit;}
+  a{color:inherit;}
+  ::-webkit-scrollbar{width:0;height:0;}
+
+  .icon{width:22px;height:22px;display:block;}
+  .icon-sm{width:17px;height:17px;display:block;}
+
+  #app{min-height:100vh;display:flex;flex-direction:column;}
+
+  /* ---------- Onboarding ---------- */
+  .onboard{
+    min-height:100vh;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:32px 24px;
+    background:radial-gradient(120% 100% at 50% -10%, #EDE9FF 0%, var(--bg) 55%);
+    text-align:center;
+  }
+  .brandmark{
+    width:64px;height:64px;border-radius:20px;
+    background:linear-gradient(135deg,var(--purple),var(--teal));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;box-shadow:var(--shadow);margin-bottom:18px;
+  }
+  .onboard-title{font-size:28px;font-weight:600;margin:0 0 6px;letter-spacing:-0.02em;}
+  .onboard-sub{color:var(--text2);font-size:15px;margin:0 0 32px;max-width:320px;line-height:1.5;}
+  .gender-row{display:flex;gap:16px;margin-bottom:28px;flex-wrap:wrap;justify-content:center;}
+  .gender-card{
+    width:140px;padding:20px 12px 16px;border-radius:var(--radius);
+    background:var(--card);border:2px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;gap:10px;
+    transition:all .15s ease;
+  }
+  .gender-card.selected{border-color:var(--purple);box-shadow:0 0 0 4px var(--purple-light);}
+  .gender-card svg{width:64px;height:64px;}
+  .gender-card span{font-weight:600;font-size:14px;}
+  .btn-primary{
+    background:var(--purple);color:#fff;border:none;border-radius:16px;
+    padding:15px 28px;font-size:15px;font-weight:600;width:100%;max-width:320px;
+    box-shadow:0 10px 24px -8px rgba(123,97,255,0.55);
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .btn-primary:disabled{opacity:.4;box-shadow:none;}
+  .btn-primary:not(:disabled):active{transform:scale(0.98);}
+  .btn-ghost{
+    background:transparent;color:var(--text2);border:none;padding:10px;font-size:14px;font-weight:600;margin-top:12px;
+  }
+  .name-input{
+    width:100%;max-width:320px;padding:14px 16px;border-radius:14px;border:2px solid var(--line);
+    font-size:15px;margin-bottom:20px;outline:none;background:var(--card);
+  }
+  .name-input:focus{border-color:var(--purple);}
+  .dots{display:flex;gap:6px;margin-bottom:26px;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--line);}
+  .dot.active{background:var(--purple);width:18px;border-radius:4px;}
+
+  /* ---------- Shell / Nav ---------- */
+  .shell{display:flex;flex:1;min-height:100vh;}
+  .sidebar{
+    display:none;
+    width:240px;flex-shrink:0;background:var(--card);border-right:1px solid var(--line);
+    padding:24px 16px;flex-direction:column;
+  }
+  .sidebar-logo{display:flex;align-items:center;gap:10px;padding:6px 10px 28px;}
+  .sidebar-logo .brandmark{width:36px;height:36px;border-radius:11px;margin:0;}
+  .sidebar-logo span{font-weight:700;font-size:16px;letter-spacing:-0.01em;}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;
+    color:var(--text2);font-weight:600;font-size:14.5px;border:none;background:none;width:100%;text-align:left;
+  }
+  .nav-item.active{background:var(--purple-light);color:var(--purple-dark);}
+  .sidebar .nav-item + .nav-item{margin-top:4px;}
+  .sidebar-footer{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 10px;border-top:1px solid var(--line);}
+  .avatar-sm{width:36px;height:36px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .avatar-sm svg{width:20px;height:20px;}
+
+  .main{flex:1;min-width:0;padding-bottom:90px;}
+  .topbar{
+    position:sticky;top:0;z-index:5;background:var(--bg);
+    padding:20px 20px 4px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .greet-eyebrow{color:var(--text2);font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+  .greet-name{font-size:22px;font-weight:700;letter-spacing:-0.01em;}
+  .icon-btn{
+    width:42px;height:42px;border-radius:14px;background:var(--card);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm);color:var(--text);
+  }
+  .page{padding:16px 20px 32px;max-width:960px;}
+
+  .bottomnav{
+    position:fixed;bottom:0;left:0;right:0;z-index:10;
+    background:var(--card);border-top:1px solid var(--line);
+    display:flex;justify-content:space-around;align-items:center;
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .bnav-item{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text2);padding:6px 10px;border-radius:12px;font-size:10.5px;font-weight:600;}
+  .bnav-item.active{color:var(--purple);}
+  .fab{
+    position:fixed;right:20px;bottom:86px;z-index:12;
+    width:58px;height:58px;border-radius:50%;background:var(--purple);color:#fff;
+    display:flex;align-items:center;justify-content:center;border:none;
+    box-shadow:0 14px 28px -8px rgba(123,97,255,0.6);
+  }
+
+  /* ---------- Cards / shared ---------- */
+  .card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow-sm);}
+  .section-title{font-size:16px;font-weight:700;margin:26px 0 12px;letter-spacing:-0.01em;display:flex;align-items:center;justify-content:space-between;}
+  .section-title .link{font-size:12.5px;font-weight:600;color:var(--purple);}
+
+  .banner{
+    background:linear-gradient(120deg,var(--purple-light),#F3F0FF);
+    border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;gap:12px;
+    margin-bottom:18px;position:relative;
+  }
+  .banner p{margin:0;font-size:13px;color:var(--purple-dark);font-weight:600;line-height:1.4;}
+  .banner button.close{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--purple-dark);opacity:.6;}
+
+  .balance-card{
+    background:linear-gradient(135deg,#5B9C81,#3E6F5C);
+    border-radius:26px;padding:24px 20px 20px;margin-bottom:16px;box-shadow:0 14px 30px -12px rgba(62,111,92,0.45);
+    color:#fff;
+  }
+  .balance-eyebrow{font-size:11px;letter-spacing:.14em;opacity:.75;text-align:center;font-weight:700;text-transform:uppercase;}
+  .balance-amount{font-size:32px;font-weight:800;text-align:center;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:-0.01em;}
+  .balance-amount button{background:rgba(255,255,255,.2);border:none;width:30px;height:30px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .balance-amount button .icon-sm{width:14px;height:14px;}
+  .balance-tabs{display:flex;justify-content:center;gap:30px;margin-top:16px;}
+  .balance-tab{background:none;border:none;color:rgba(255,255,255,.62);font-weight:700;font-size:12.5px;letter-spacing:.03em;padding-bottom:7px;border-bottom:2px solid transparent;text-transform:uppercase;}
+  .balance-tab.active{color:#fff;border-bottom-color:#fff;}
+  .donut-card{display:flex;flex-direction:column;align-items:center;padding:22px 16px 6px;margin-bottom:6px;}
+  .donut-card svg{margin-bottom:-136px;}
+  .donut-center{margin-bottom:18px;text-align:center;}
+  .donut-amount{font-size:24px;font-weight:800;letter-spacing:-0.01em;}
+  .donut-sub{font-size:11.5px;color:var(--text2);font-weight:600;margin-top:2px;}
+  .donut-card .cat-row{width:100%;}
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px;}
+  .gauge-amount{font-size:34px;font-weight:800;letter-spacing:-0.02em;margin-top:-118px;}
+  .gauge-label{font-size:12.5px;color:var(--text2);font-weight:600;margin-top:2px;margin-bottom:22px;}
+  .weekbar{display:flex;justify-content:space-between;gap:6px;margin-top:14px;}
+  .weekday{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;}
+  .weekday .bar-track{width:100%;height:54px;border-radius:8px;background:var(--bg);display:flex;align-items:flex-end;overflow:hidden;}
+  .weekday .bar-fill{width:100%;border-radius:8px;background:linear-gradient(180deg,var(--teal),#25a99c);}
+  .weekday.today .bar-fill{background:linear-gradient(180deg,var(--purple),var(--purple-dark));}
+  .weekday span{font-size:10.5px;color:var(--text2);font-weight:700;}
+  .weekday.today span{color:var(--purple);}
+
+  .summary-row{display:flex;gap:10px;margin-top:20px;}
+  .summary-cell{flex:1;background:var(--card);border-radius:16px;padding:14px 12px;box-shadow:var(--shadow-sm);}
+  .summary-cell .sc-label{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .summary-cell .sc-value{font-size:16px;font-weight:800;margin-top:4px;letter-spacing:-0.01em;}
+  .summary-cell.income .sc-value{color:var(--teal);}
+  .summary-cell.expense .sc-value{color:var(--red);}
+  .summary-cell.savings .sc-value{color:var(--purple);}
+
+  .cat-row{display:flex;align-items:center;gap:12px;padding:12px 4px;}
+  .cat-icon{width:42px;height:42px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+  .cat-info{flex:1;min-width:0;}
+  .cat-info .cat-name{font-weight:700;font-size:14px;}
+  .cat-info .cat-sub{font-size:12px;color:var(--text2);margin-top:1px;}
+  .cat-amount{font-weight:700;font-size:14px;white-space:nowrap;}
+  .cat-amount.neg{color:var(--red);}
+  .cat-amount.pos{color:var(--teal);}
+
+  .empty{padding:40px 16px;text-align:center;color:var(--text2);}
+  .empty svg{width:44px;height:44px;margin-bottom:10px;opacity:.5;}
+  .empty p{font-size:13.5px;margin:0;line-height:1.5;}
+
+  /* Transactions */
+  .tabs{display:flex;gap:6px;background:var(--card);padding:5px;border-radius:14px;box-shadow:var(--shadow-sm);}
+  .tab-btn{flex:1;border:none;background:none;padding:10px 6px;border-radius:10px;font-size:12.5px;font-weight:700;color:var(--text2);}
+  .tab-btn.active{background:var(--purple);color:#fff;}
+  .totals-bar{display:flex;justify-content:space-around;padding:16px 0;margin-top:16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-sm);}
+  .totals-bar .t-cell{text-align:center;}
+  .totals-bar .t-label{font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+  .totals-bar .t-val{font-size:16px;font-weight:800;margin-top:3px;}
+  .date-group-label{font-size:12px;font-weight:700;color:var(--text2);margin:22px 0 6px 4px;text-transform:uppercase;letter-spacing:.04em;}
+  .txn-item{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow-sm);margin-bottom:8px;}
+  .txn-item .cat-icon{width:38px;height:38px;font-size:17px;}
+  .txn-del{background:none;border:none;color:var(--text2);opacity:.5;padding:6px;flex-shrink:0;}
+
+  /* Budget */
+  .month-selector{display:flex;align-items:center;justify-content:space-between;background:var(--card);padding:10px 12px;border-radius:16px;box-shadow:var(--shadow-sm);}
+  .month-selector button{background:var(--bg);border:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text);}
+  .month-selector .m-label{font-weight:700;font-size:14.5px;}
+  .budget-card{background:var(--card);border-radius:16px;padding:16px;box-shadow:var(--shadow-sm);margin-bottom:10px;}
+  .budget-card .bc-top{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .budget-card .bc-top .cat-icon{width:36px;height:36px;font-size:16px;}
+  .budget-card .bc-title{font-weight:700;font-size:14px;flex:1;}
+  .budget-card .bc-nums{font-size:12.5px;color:var(--text2);font-weight:600;}
+  .progress-track{height:9px;border-radius:6px;background:var(--bg);overflow:hidden;}
+  .progress-fill{height:100%;border-radius:6px;}
+  .bc-status{font-size:11.5px;font-weight:700;margin-top:8px;}
+  .bc-status.ok{color:var(--teal);}
+  .bc-status.warn{color:var(--amber);}
+  .bc-status.over{color:var(--red);}
+  .edit-limit{background:none;border:none;color:var(--purple);font-weight:700;font-size:12px;}
+
+  /* Reports */
+  .filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+  .filter-chip{flex-shrink:0;background:var(--card);border:1px solid var(--line);padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:700;color:var(--text2);}
+  .filter-chip.active{background:var(--text);color:#fff;border-color:var(--text);}
+  .export-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:var(--text);color:#fff;border:none;padding:15px;border-radius:16px;font-weight:700;font-size:14px;margin-top:22px;}
+
+  /* Settings */
+  .profile-card{display:flex;align-items:center;gap:14px;padding:6px 2px 20px;}
+  .profile-card .avatar-lg{width:58px;height:58px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;}
+  .profile-card .avatar-lg svg{width:30px;height:30px;}
+  .profile-card .p-name{font-weight:700;font-size:16px;}
+  .profile-card .p-sub{font-size:12.5px;color:var(--text2);}
+  .setting-row{display:flex;align-items:center;gap:14px;padding:14px 2px;border-bottom:1px solid var(--line);background:none;border-left:none;border-right:none;border-top:none;width:100%;text-align:left;}
+  .setting-row:last-child{border-bottom:none;}
+  .setting-row .s-icon{width:36px;height:36px;border-radius:11px;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--purple);flex-shrink:0;}
+  .setting-row .s-label{flex:1;font-weight:600;font-size:14px;}
+  .setting-row .s-val{color:var(--text2);font-size:13px;}
+
+  /* Modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(31,41,51,0.45);z-index:50;display:flex;align-items:flex-end;justify-content:center;}
+  .modal-sheet{background:var(--card);width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;animation:sheetUp .22s ease;}
+  @keyframes sheetUp{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  @media(min-width:640px){.modal-overlay{align-items:center;}.modal-sheet{border-radius:24px;}}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+  .modal-head h3{margin:0;font-size:17px;font-weight:700;}
+  .modal-head button{background:var(--bg);border:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .type-toggle{display:flex;background:var(--bg);border-radius:14px;padding:4px;margin-bottom:16px;}
+  .type-toggle button{flex:1;border:none;background:none;padding:11px;border-radius:11px;font-weight:700;font-size:13.5px;color:var(--text2);}
+  .type-toggle button.active.expense{background:var(--red);color:#fff;}
+  .type-toggle button.active.income{background:var(--teal);color:#fff;}
+  .field-label{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 6px;}
+  .field-input{width:100%;padding:13px 14px;border-radius:13px;border:2px solid var(--line);font-size:15px;outline:none;background:var(--bg);}
+  .field-input:focus{border-color:var(--purple);background:#fff;}
+  .amount-input{font-size:30px;font-weight:800;text-align:center;border:none;background:none;width:100%;outline:none;color:var(--text);}
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px;}
+  .cat-pick{display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 4px;border-radius:14px;border:2px solid transparent;background:var(--bg);}
+  .cat-pick.selected{border-color:var(--purple);background:var(--purple-light);}
+  .cat-pick .cat-icon{width:38px;height:38px;font-size:17px;}
+  .cat-pick span{font-size:10px;font-weight:700;color:var(--text2);text-align:center;line-height:1.2;}
+  .swatch-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}
+  .swatch{width:36px;height:36px;border-radius:50%;border:3px solid transparent;padding:0;}
+  .swatch.selected{border-color:var(--text);box-shadow:0 0 0 2px #fff inset;}
+
+  @media(min-width:900px){
+    .sidebar{display:flex;}
+    .bottomnav,.fab{display:none;}
+    .main{padding-bottom:20px;}
+    .topbar{padding:28px 40px 4px;}
+    .page{padding:16px 40px 40px;max-width:1100px;}
+    .fab-desktop{display:flex;align-items:center;gap:8px;background:var(--purple);color:#fff;border:none;padding:12px 20px;border-radius:14px;font-weight:700;font-size:13.5px;box-shadow:0 10px 24px -8px rgba(123,97,255,.5);}
+  }
+  .fab-desktop{display:none;}
+
+  .grid-2{display:grid;grid-template-columns:1fr;gap:16px;}
+  @media(min-width:900px){.grid-2{grid-template-columns:1fr 1fr;}}
+
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:12px 20px;border-radius:14px;font-size:13px;font-weight:600;z-index:60;box-shadow:var(--shadow);}
+  @media(min-width:900px){.toast{bottom:30px;}}
+
+  /* RTL support (Arabic, Urdu). Flexbox row layouts already mirror
+     automatically under dir="rtl" — these cover the remaining
+     fixed-position and text-align pieces that don't. */
+  [dir="rtl"] body{font-family:'Inter','Noto Sans Arabic',system-ui,sans-serif;}
+  [dir="rtl"] .sidebar{border-right:none;border-left:1px solid var(--line);}
+  [dir="rtl"] .nav-item{text-align:right;}
+  [dir="rtl"] .banner button.close{right:auto;left:10px;}
+  [dir="rtl"] .fab{right:auto;left:20px;}
+  [dir="rtl"] .fab-desktop{margin-right:0;margin-left:8px;}
+  [dir="rtl"] .setting-row{text-align:right;}
+  [dir="rtl"] .edit-limit{margin-left:0;margin-right:auto;}
+  [dir="rtl"] .swatch-row{direction:ltr;justify-content:flex-end;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ===================== DATA ===================== */
+const CURRENCIES = {USD:'$',EUR:'€',GBP:'£',SAR:'SAR ',AED:'AED ',INR:'₹'};
+const DEFAULT_CATEGORIES = [
+  {id:'food',label:'Food & Dining',icon:'🍔',color:'#FF6B6B',bg:'#FFEDED'},
+  {id:'transport',label:'Transport',icon:'🚗',color:'#7B61FF',bg:'#EFEBFF'},
+  {id:'shopping',label:'Shopping',icon:'🛍️',color:'#2EC4B6',bg:'#E4FBF8'},
+  {id:'bills',label:'Bills & Utilities',icon:'💡',color:'#F5A623',bg:'#FFF4E0'},
+  {id:'entertainment',label:'Entertainment',icon:'🎬',color:'#9B59B6',bg:'#F3E9FB'},
+  {id:'health',label:'Health',icon:'💊',color:'#3BB4E5',bg:'#E4F5FC'},
+  {id:'loan',label:'Loan / EMI',icon:'🏦',color:'#8B5E3C',bg:'#F2E7DC'},
+  {id:'other',label:'Other',icon:'📦',color:'#6B7280',bg:'#EEEEF2'},
+];
+const CATEGORY_COLORS = ['#FF6B6B','#7B61FF','#2EC4B6','#F5A623','#9B59B6','#3BB4E5','#8B5E3C','#EC4899','#22C55E','#6B7280'];
+function hexToLightBg(hex){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+  const mix = (c)=> Math.round(c + (255-c)*0.86);
+  return 'rgb('+mix(r)+','+mix(g)+','+mix(b)+')';
+}
+const INCOME_CAT = {id:'income',label:'Income',icon:'💰',color:'#2EC4B6',bg:'#E4FBF8'};
+const FALLBACK_CAT = {id:'other',label:'Uncategorized',icon:'📦',color:'#6B7280',bg:'#EEEEF2'};
+function catById(id){
+  if(id==='income') return INCOME_CAT;
+  return STATE.categories.find(c=>c.id===id) || STATE.categories.find(c=>c.id==='other') || FALLBACK_CAT;
+}
+
+/* ===================== I18N ===================== */
+const LANGUAGES = {
+  en:{name:'English',rtl:false}, ar:{name:'العربية',rtl:true}, ur:{name:'اردو',rtl:true},
+  hi:{name:'हिन्दी',rtl:false}, id:{name:'Bahasa Indonesia',rtl:false}, es:{name:'Español',rtl:false},
+  fr:{name:'Français',rtl:false}, zh:{name:'中文',rtl:false}, tr:{name:'Türkçe',rtl:false},
+};
+const TRANSLATIONS = {
+en:{app_name:'Saving & Spending',ob_tagline:"Track income, expenses, and budgets — and always know what's safe to spend.",get_started:'Get started',tell_us_about_you:'Tell us about you',ob_sub2:'This personalizes your onboarding illustration.',male:'Male',female:'Female',continue_btn:'Continue',back_btn:'Back',whats_your_name:'What should we call you?',ob_sub3:"We'll use this to greet you on your dashboard.",name_placeholder:'Your name',create_account:'Create my account',created_by:'Created by',welcome_back:'Welcome back',balance:'Balance',expenses:'Expenses',income:'Income',savings:'Savings',this_week:'This week',see_reports:'See reports',safe_to_spend:'Safe to spend',spent_this_month:'spent this month',earned_this_month:'earned this month',no_expenses_yet:'No expenses recorded yet this month.',no_income_yet:'No income recorded yet this month.',tap_plus_to_add:'Tap the + button to add one.',banner_on_track:"You're on track this month. Keep logging transactions daily.",banner_over_budget:"You've gone over your monthly budget. Review your categories.",nav_dashboard:'Dashboard',nav_transactions:'Transactions',nav_budget:'Budget',nav_reports:'Reports',nav_more:'More',today:'Today',week:'Week',month:'Month',all:'All',net:'Net',no_transactions:'No transactions found.',loans_emis:'Loans & EMIs',add_loan:'+ Add loan',category_budgets:'Category budgets',spent_word:'Spent',budget_word:'Budget',on_track:'On track',almost_there:'Almost there',over_budget:'Over budget',no_limit_set:'No limit set',pay_this_month:'Pay this month',paid_for:'Paid for',fully_paid_off:'Fully paid off',no_loans_yet:'No loans added yet. Track a loan or EMI to see the actual amount, remaining balance, and pay it month by month.',remove_btn:'Remove',edit_btn:'Edit',months_3:'3 months',months_6:'6 months',months_12:'12 months',income_vs_expense:'Income vs Expense',savings_rate:'Savings rate',net_saved:'net saved',budget_performance:'Budget performance',of_budget_used:"of this month's budget used",top_spending_categories:'Top spending categories',no_expenses_this_month:'No expenses recorded this month yet.',export_csv:'Export as CSV',member_since:'Member since',currency_label:'Currency',manage_categories:'Manage categories',categories_count:'categories',backup_export:'Backup & export data',notifications_label:'Notifications',on_word:'On',off_word:'Off',about_app:'About Saving & Spending',log_out:'Log out',language_label:'Language',add_transaction_title:'Add transaction',category_label:'Category',note_optional:'Note (optional)',date_label:'Date',save_transaction_btn:'Save transaction',add_category_title:'Add category',name_field:'Name',icon_emoji:'Icon (emoji)',color_label:'Color',save_category_btn:'Save category',manage_categories_title:'Manage categories',add_category_btn:'Add category',add_loan_title:'Add loan / EMI',loan_name_field:'Loan name',total_loan_amount:'Total loan amount',already_paid:'Amount already paid so far (optional)',monthly_emi:'Monthly EMI amount',save_loan_btn:'Save loan',edit_budget_title:'Edit budget',save_limit_btn:'Save limit',choose_currency:'Choose currency',choose_language:'Choose language',about_title:'About',close_btn:'Close',transaction_added:'Transaction added',transaction_deleted:'Transaction deleted',enter_valid_amount:'Enter a valid amount',category_added:'Category added',category_deleted:'Category deleted',need_one_category:'You need at least one category',loan_added:'Loan added',loan_removed:'Loan removed',budget_updated:'Budget updated',backup_exported:'Backup exported as CSV',cat_food:'Food & Dining',cat_transport:'Transport',cat_shopping:'Shopping',cat_bills:'Bills & Utilities',cat_entertainment:'Entertainment',cat_health:'Health',cat_loan:'Loan / EMI',cat_other:'Other',reset_try_again:'Something reset — please reopen and try again',something_wrong_saving:'Something went wrong saving that — please try again',fill_loan_fields:'Fill in name, loan amount and EMI',category_exists:'A category with that name already exists',enter_category_name:'Enter a category name',confirm_delete_category:'Delete this category? Existing transactions in it will show as Uncategorized.',confirm_logout:'Log out? Your transactions, budgets and loans stay saved on this device — you\'ll just need to go through setup again.',cat_income:'Income'},
+ar:{app_name:'الادخار والإنفاق',ob_tagline:'تتبّع الدخل والمصروفات والميزانيات — واعرف دائمًا المبلغ الآمن للإنفاق.',get_started:'ابدأ الآن',tell_us_about_you:'أخبرنا عن نفسك',ob_sub2:'هذا يخصص رسم الإعداد الخاص بك.',male:'ذكر',female:'أنثى',continue_btn:'متابعة',back_btn:'رجوع',whats_your_name:'ماذا نناديك؟',ob_sub3:'سنستخدم هذا لتحيتك في لوحتك الرئيسية.',name_placeholder:'اسمك',create_account:'إنشاء حسابي',created_by:'من إنشاء',welcome_back:'مرحبًا بعودتك',balance:'الرصيد',expenses:'المصروفات',income:'الدخل',savings:'المدخرات',this_week:'هذا الأسبوع',see_reports:'عرض التقارير',safe_to_spend:'المتاح للإنفاق',spent_this_month:'أُنفق هذا الشهر',earned_this_month:'تم كسبه هذا الشهر',no_expenses_yet:'لا توجد مصروفات مسجلة هذا الشهر بعد.',no_income_yet:'لا يوجد دخل مسجل هذا الشهر بعد.',tap_plus_to_add:'اضغط على زر + لإضافة واحدة.',banner_on_track:'أنت على المسار الصحيح هذا الشهر. واظب على تسجيل معاملاتك يوميًا.',banner_over_budget:'لقد تجاوزت ميزانيتك الشهرية. راجع فئاتك.',nav_dashboard:'الرئيسية',nav_transactions:'المعاملات',nav_budget:'الميزانية',nav_reports:'التقارير',nav_more:'المزيد',today:'اليوم',week:'الأسبوع',month:'الشهر',all:'الكل',net:'الصافي',no_transactions:'لا توجد معاملات.',loans_emis:'القروض والأقساط',add_loan:'+ إضافة قرض',category_budgets:'ميزانيات الفئات',spent_word:'المُنفق',budget_word:'الميزانية',on_track:'على المسار الصحيح',almost_there:'اقتربت من الحد',over_budget:'تجاوزت الميزانية',no_limit_set:'لم يُحدد حد',pay_this_month:'دفع هذا الشهر',paid_for:'تم الدفع عن',fully_paid_off:'تم السداد بالكامل',no_loans_yet:'لم تُضف أي قروض بعد. تتبّع قرضًا أو قسطًا لمعرفة المبلغ الفعلي والرصيد المتبقي، وادفعه شهريًا.',remove_btn:'إزالة',edit_btn:'تعديل',months_3:'3 أشهر',months_6:'6 أشهر',months_12:'12 شهرًا',income_vs_expense:'الدخل مقابل المصروفات',savings_rate:'معدل الادخار',net_saved:'صافي المدخرات',budget_performance:'أداء الميزانية',of_budget_used:'من ميزانية هذا الشهر مستخدم',top_spending_categories:'أكثر فئات الإنفاق',no_expenses_this_month:'لا توجد مصروفات مسجلة هذا الشهر بعد.',export_csv:'تصدير كملف CSV',member_since:'عضو منذ',currency_label:'العملة',manage_categories:'إدارة الفئات',categories_count:'فئات',backup_export:'نسخ احتياطي وتصدير البيانات',notifications_label:'الإشعارات',on_word:'مفعّل',off_word:'مغلق',about_app:'عن التطبيق',log_out:'تسجيل الخروج',language_label:'اللغة',add_transaction_title:'إضافة معاملة',category_label:'الفئة',note_optional:'ملاحظة (اختياري)',date_label:'التاريخ',save_transaction_btn:'حفظ المعاملة',add_category_title:'إضافة فئة',name_field:'الاسم',icon_emoji:'الأيقونة (رمز تعبيري)',color_label:'اللون',save_category_btn:'حفظ الفئة',manage_categories_title:'إدارة الفئات',add_category_btn:'إضافة فئة',add_loan_title:'إضافة قرض / قسط',loan_name_field:'اسم القرض',total_loan_amount:'إجمالي مبلغ القرض',already_paid:'المبلغ المسدد حتى الآن (اختياري)',monthly_emi:'مبلغ القسط الشهري',save_loan_btn:'حفظ القرض',edit_budget_title:'تعديل الميزانية',save_limit_btn:'حفظ الحد',choose_currency:'اختر العملة',choose_language:'اختر اللغة',about_title:'حول',close_btn:'إغلاق',transaction_added:'تمت إضافة المعاملة',transaction_deleted:'تم حذف المعاملة',enter_valid_amount:'أدخل مبلغًا صحيحًا',category_added:'تمت إضافة الفئة',category_deleted:'تم حذف الفئة',need_one_category:'تحتاج إلى فئة واحدة على الأقل',loan_added:'تمت إضافة القرض',loan_removed:'تمت إزالة القرض',budget_updated:'تم تحديث الميزانية',backup_exported:'تم تصدير النسخة الاحتياطية كملف CSV',cat_food:'الطعام والمطاعم',cat_transport:'المواصلات',cat_shopping:'التسوق',cat_bills:'الفواتير والمرافق',cat_entertainment:'الترفيه',cat_health:'الصحة',cat_loan:'قرض / قسط',cat_other:'أخرى',reset_try_again:'حدث خلل ما — يرجى إعادة الفتح والمحاولة مرة أخرى',something_wrong_saving:'حدث خطأ أثناء الحفظ — يرجى المحاولة مرة أخرى',fill_loan_fields:'أدخل الاسم ومبلغ القرض والقسط الشهري',category_exists:'توجد فئة بهذا الاسم بالفعل',enter_category_name:'أدخل اسم الفئة',confirm_delete_category:'هل تريد حذف هذه الفئة؟ ستظهر المعاملات الموجودة فيها كغير مصنفة.',confirm_logout:'تسجيل الخروج؟ ستبقى معاملاتك وميزانياتك وقروضك محفوظة على هذا الجهاز — ستحتاج فقط لإعادة الإعداد.',cat_income:'دخل'},
+ur:{app_name:'بچت اور اخراجات',ob_tagline:'آمدنی، اخراجات اور بجٹ کو ٹریک کریں — اور ہمیشہ جانیں کہ کتنا خرچ کرنا محفوظ ہے۔',get_started:'شروع کریں',tell_us_about_you:'ہمیں اپنے بارے میں بتائیں',ob_sub2:'یہ آپ کی آن بورڈنگ تصویر کو ذاتی بناتا ہے۔',male:'مرد',female:'عورت',continue_btn:'جاری رکھیں',back_btn:'پیچھے',whats_your_name:'ہم آپ کو کیا کہہ کر پکاریں؟',ob_sub3:'ہم اسے آپ کے ڈیش بورڈ پر خوش آمدید کہنے کے لیے استعمال کریں گے۔',name_placeholder:'آپ کا نام',create_account:'میرا اکاؤنٹ بنائیں',created_by:'تیار کردہ',welcome_back:'خوش آمدید',balance:'بیلنس',expenses:'اخراجات',income:'آمدنی',savings:'بچت',this_week:'اس ہفتے',see_reports:'رپورٹس دیکھیں',safe_to_spend:'خرچ کرنے کے لیے محفوظ',spent_this_month:'اس مہینے خرچ ہوا',earned_this_month:'اس مہینے کمایا',no_expenses_yet:'اس مہینے ابھی تک کوئی خرچ درج نہیں ہوا۔',no_income_yet:'اس مہینے ابھی تک کوئی آمدنی درج نہیں ہوئی۔',tap_plus_to_add:'ایک شامل کرنے کے لیے + بٹن دبائیں۔',banner_on_track:'آپ اس مہینے صحیح راستے پر ہیں۔ روزانہ لین دین درج کرتے رہیں۔',banner_over_budget:'آپ اپنے ماہانہ بجٹ سے تجاوز کر گئے ہیں۔ اپنی کیٹیگریز کا جائزہ لیں۔',nav_dashboard:'ڈیش بورڈ',nav_transactions:'لین دین',nav_budget:'بجٹ',nav_reports:'رپورٹس',nav_more:'مزید',today:'آج',week:'ہفتہ',month:'مہینہ',all:'سب',net:'خالص',no_transactions:'کوئی لین دین نہیں ملا۔',loans_emis:'قرضے اور قسطیں',add_loan:'+ قرض شامل کریں',category_budgets:'کیٹیگری بجٹ',spent_word:'خرچ شدہ',budget_word:'بجٹ',on_track:'صحیح راستے پر',almost_there:'قریب پہنچ گئے',over_budget:'بجٹ سے تجاوز',no_limit_set:'کوئی حد مقرر نہیں',pay_this_month:'اس مہینے ادا کریں',paid_for:'ادا کیا گیا',fully_paid_off:'مکمل ادائیگی ہو گئی',no_loans_yet:'ابھی تک کوئی قرض شامل نہیں کیا گیا۔ اصل رقم اور باقی بیلنس دیکھنے کے لیے قرض یا قسط ٹریک کریں، اور ہر مہینے ادا کریں۔',remove_btn:'ہٹائیں',edit_btn:'ترمیم',months_3:'3 مہینے',months_6:'6 مہینے',months_12:'12 مہینے',income_vs_expense:'آمدنی بمقابلہ اخراجات',savings_rate:'بچت کی شرح',net_saved:'خالص بچت',budget_performance:'بجٹ کی کارکردگی',of_budget_used:'اس مہینے کا بجٹ استعمال ہوا',top_spending_categories:'سب سے زیادہ خرچ والی کیٹیگریز',no_expenses_this_month:'اس مہینے ابھی تک کوئی خرچ درج نہیں ہوا۔',export_csv:'CSV کے طور پر برآمد کریں',member_since:'رکن بننے کی تاریخ',currency_label:'کرنسی',manage_categories:'کیٹیگریز کا انتظام',categories_count:'کیٹیگریز',backup_export:'بیک اپ اور ڈیٹا برآمد کریں',notifications_label:'اطلاعات',on_word:'آن',off_word:'آف',about_app:'ایپ کے بارے میں',log_out:'لاگ آؤٹ',language_label:'زبان',add_transaction_title:'لین دین شامل کریں',category_label:'کیٹیگری',note_optional:'نوٹ (اختیاری)',date_label:'تاریخ',save_transaction_btn:'لین دین محفوظ کریں',add_category_title:'کیٹیگری شامل کریں',name_field:'نام',icon_emoji:'آئیکن (ایموجی)',color_label:'رنگ',save_category_btn:'کیٹیگری محفوظ کریں',manage_categories_title:'کیٹیگریز کا انتظام',add_category_btn:'کیٹیگری شامل کریں',add_loan_title:'قرض / قسط شامل کریں',loan_name_field:'قرض کا نام',total_loan_amount:'کل قرض کی رقم',already_paid:'اب تک ادا کی گئی رقم (اختیاری)',monthly_emi:'ماہانہ قسط کی رقم',save_loan_btn:'قرض محفوظ کریں',edit_budget_title:'بجٹ میں ترمیم کریں',save_limit_btn:'حد محفوظ کریں',choose_currency:'کرنسی منتخب کریں',choose_language:'زبان منتخب کریں',about_title:'کے بارے میں',close_btn:'بند کریں',transaction_added:'لین دین شامل ہو گیا',transaction_deleted:'لین دین حذف ہو گیا',enter_valid_amount:'درست رقم درج کریں',category_added:'کیٹیگری شامل ہو گئی',category_deleted:'کیٹیگری حذف ہو گئی',need_one_category:'کم از کم ایک کیٹیگری ضروری ہے',loan_added:'قرض شامل ہو گیا',loan_removed:'قرض ہٹا دیا گیا',budget_updated:'بجٹ اپ ڈیٹ ہو گیا',backup_exported:'بیک اپ CSV کے طور پر برآمد ہو گیا',cat_food:'کھانا اور ریستوران',cat_transport:'آمد و رفت',cat_shopping:'خریداری',cat_bills:'بل اور یوٹیلیٹیز',cat_entertainment:'تفریح',cat_health:'صحت',cat_loan:'قرض / قسط',cat_other:'دیگر',reset_try_again:'کچھ ری سیٹ ہو گیا — براہ کرم دوبارہ کھولیں اور کوشش کریں',something_wrong_saving:'محفوظ کرنے میں کچھ غلط ہو گیا — براہ کرم دوبارہ کوشش کریں',fill_loan_fields:'نام، قرض کی رقم اور قسط درج کریں',category_exists:'اس نام کی کیٹیگری پہلے سے موجود ہے',enter_category_name:'کیٹیگری کا نام درج کریں',confirm_delete_category:'اس کیٹیگری کو حذف کریں؟ اس میں موجود لین دین غیر درجہ بند دکھائے جائیں گے۔',confirm_logout:'لاگ آؤٹ کریں؟ آپ کے لین دین، بجٹ اور قرضے اس ڈیوائس پر محفوظ رہیں گے — آپ کو صرف دوبارہ سیٹ اپ کرنا ہوگا۔',cat_income:'آمدنی'},
+hi:{app_name:'बचत और खर्च',ob_tagline:'आय, खर्च और बजट को ट्रैक करें — और हमेशा जानें कि कितना खर्च करना सुरक्षित है।',get_started:'शुरू करें',tell_us_about_you:'अपने बारे में बताएं',ob_sub2:'यह आपके ऑनबोर्डिंग चित्र को व्यक्तिगत बनाता है।',male:'पुरुष',female:'महिला',continue_btn:'जारी रखें',back_btn:'वापस',whats_your_name:'हम आपको क्या कहें?',ob_sub3:'हम इसका उपयोग आपके डैशबोर्ड पर स्वागत करने के लिए करेंगे।',name_placeholder:'आपका नाम',create_account:'मेरा खाता बनाएं',created_by:'निर्माता',welcome_back:'वापसी पर स्वागत है',balance:'बैलेंस',expenses:'खर्च',income:'आय',savings:'बचत',this_week:'इस सप्ताह',see_reports:'रिपोर्ट देखें',safe_to_spend:'खर्च करने के लिए सुरक्षित',spent_this_month:'इस महीने खर्च हुआ',earned_this_month:'इस महीने कमाया',no_expenses_yet:'इस महीने अभी तक कोई खर्च दर्ज नहीं हुआ।',no_income_yet:'इस महीने अभी तक कोई आय दर्ज नहीं हुई।',tap_plus_to_add:'एक जोड़ने के लिए + बटन दबाएं।',banner_on_track:'आप इस महीने सही राह पर हैं। रोज़ाना लेन-देन दर्ज करते रहें।',banner_over_budget:'आपने अपना मासिक बजट पार कर लिया है। अपनी श्रेणियों की समीक्षा करें।',nav_dashboard:'डैशबोर्ड',nav_transactions:'लेन-देन',nav_budget:'बजट',nav_reports:'रिपोर्ट',nav_more:'अधिक',today:'आज',week:'सप्ताह',month:'महीना',all:'सभी',net:'शुद्ध',no_transactions:'कोई लेन-देन नहीं मिला।',loans_emis:'ऋण और ईएमआई',add_loan:'+ ऋण जोड़ें',category_budgets:'श्रेणी बजट',spent_word:'खर्च हुआ',budget_word:'बजट',on_track:'सही राह पर',almost_there:'लगभग सीमा तक',over_budget:'बजट से अधिक',no_limit_set:'कोई सीमा निर्धारित नहीं',pay_this_month:'इस महीने भुगतान करें',paid_for:'भुगतान हुआ',fully_paid_off:'पूरी तरह चुकाया गया',no_loans_yet:'अभी तक कोई ऋण नहीं जोड़ा गया। वास्तविक राशि और शेष बैलेंस देखने के लिए ऋण या ईएमआई ट्रैक करें, और इसे महीने-दर-महीने चुकाएं।',remove_btn:'हटाएं',edit_btn:'संपादित करें',months_3:'3 महीने',months_6:'6 महीने',months_12:'12 महीने',income_vs_expense:'आय बनाम खर्च',savings_rate:'बचत दर',net_saved:'शुद्ध बचत',budget_performance:'बजट प्रदर्शन',of_budget_used:'इस महीने का बजट उपयोग हुआ',top_spending_categories:'सबसे अधिक खर्च वाली श्रेणियां',no_expenses_this_month:'इस महीने अभी तक कोई खर्च दर्ज नहीं हुआ।',export_csv:'CSV के रूप में निर्यात करें',member_since:'सदस्य बने',currency_label:'मुद्रा',manage_categories:'श्रेणियां प्रबंधित करें',categories_count:'श्रेणियां',backup_export:'बैकअप और डेटा निर्यात करें',notifications_label:'सूचनाएं',on_word:'चालू',off_word:'बंद',about_app:'ऐप के बारे में',log_out:'लॉग आउट',language_label:'भाषा',add_transaction_title:'लेन-देन जोड़ें',category_label:'श्रेणी',note_optional:'नोट (वैकल्पिक)',date_label:'तारीख',save_transaction_btn:'लेन-देन सहेजें',add_category_title:'श्रेणी जोड़ें',name_field:'नाम',icon_emoji:'आइकन (इमोजी)',color_label:'रंग',save_category_btn:'श्रेणी सहेजें',manage_categories_title:'श्रेणियां प्रबंधित करें',add_category_btn:'श्रेणी जोड़ें',add_loan_title:'ऋण / ईएमआई जोड़ें',loan_name_field:'ऋण का नाम',total_loan_amount:'कुल ऋण राशि',already_paid:'अब तक चुकाई गई राशि (वैकल्पिक)',monthly_emi:'मासिक ईएमआई राशि',save_loan_btn:'ऋण सहेजें',edit_budget_title:'बजट संपादित करें',save_limit_btn:'सीमा सहेजें',choose_currency:'मुद्रा चुनें',choose_language:'भाषा चुनें',about_title:'के बारे में',close_btn:'बंद करें',transaction_added:'लेन-देन जोड़ा गया',transaction_deleted:'लेन-देन हटाया गया',enter_valid_amount:'एक मान्य राशि दर्ज करें',category_added:'श्रेणी जोड़ी गई',category_deleted:'श्रेणी हटाई गई',need_one_category:'आपको कम से कम एक श्रेणी चाहिए',loan_added:'ऋण जोड़ा गया',loan_removed:'ऋण हटाया गया',budget_updated:'बजट अपडेट हुआ',backup_exported:'बैकअप CSV के रूप में निर्यात हुआ',cat_food:'भोजन और रेस्तरां',cat_transport:'परिवहन',cat_shopping:'खरीदारी',cat_bills:'बिल और उपयोगिताएं',cat_entertainment:'मनोरंजन',cat_health:'स्वास्थ्य',cat_loan:'ऋण / ईएमआई',cat_other:'अन्य',reset_try_again:'कुछ रीसेट हो गया — कृपया दोबारा खोलें और पुनः प्रयास करें',something_wrong_saving:'सहेजने में कुछ गड़बड़ हुई — कृपया पुनः प्रयास करें',fill_loan_fields:'नाम, ऋण राशि और ईएमआई भरें',category_exists:'इस नाम की श्रेणी पहले से मौजूद है',enter_category_name:'एक श्रेणी नाम दर्ज करें',confirm_delete_category:'यह श्रेणी हटाएं? इसमें मौजूद लेन-देन अवर्गीकृत के रूप में दिखेंगे।',confirm_logout:'लॉग आउट करें? आपके लेन-देन, बजट और ऋण इस डिवाइस पर सहेजे रहेंगे — आपको बस दोबारा सेटअप करना होगा।',cat_income:'आय'},
+id:{app_name:'Tabungan & Pengeluaran',ob_tagline:'Lacak pemasukan, pengeluaran, dan anggaran — dan selalu tahu berapa yang aman untuk dibelanjakan.',get_started:'Mulai',tell_us_about_you:'Ceritakan tentang Anda',ob_sub2:'Ini mempersonalisasi ilustrasi orientasi Anda.',male:'Pria',female:'Wanita',continue_btn:'Lanjutkan',back_btn:'Kembali',whats_your_name:'Bagaimana kami memanggil Anda?',ob_sub3:'Kami akan menggunakannya untuk menyapa Anda di dasbor Anda.',name_placeholder:'Nama Anda',create_account:'Buat akun saya',created_by:'Dibuat oleh',welcome_back:'Selamat datang kembali',balance:'Saldo',expenses:'Pengeluaran',income:'Pemasukan',savings:'Tabungan',this_week:'Minggu ini',see_reports:'Lihat laporan',safe_to_spend:'Aman untuk dibelanjakan',spent_this_month:'dibelanjakan bulan ini',earned_this_month:'diperoleh bulan ini',no_expenses_yet:'Belum ada pengeluaran tercatat bulan ini.',no_income_yet:'Belum ada pemasukan tercatat bulan ini.',tap_plus_to_add:'Ketuk tombol + untuk menambahkan.',banner_on_track:'Anda berada di jalur yang benar bulan ini. Terus catat transaksi setiap hari.',banner_over_budget:'Anda telah melebihi anggaran bulanan. Tinjau kategori Anda.',nav_dashboard:'Dasbor',nav_transactions:'Transaksi',nav_budget:'Anggaran',nav_reports:'Laporan',nav_more:'Lainnya',today:'Hari ini',week:'Minggu',month:'Bulan',all:'Semua',net:'Bersih',no_transactions:'Tidak ada transaksi ditemukan.',loans_emis:'Pinjaman & Cicilan',add_loan:'+ Tambah pinjaman',category_budgets:'Anggaran kategori',spent_word:'Dibelanjakan',budget_word:'Anggaran',on_track:'Sesuai rencana',almost_there:'Hampir mencapai batas',over_budget:'Melebihi anggaran',no_limit_set:'Belum ada batas ditetapkan',pay_this_month:'Bayar bulan ini',paid_for:'Dibayar untuk',fully_paid_off:'Lunas sepenuhnya',no_loans_yet:'Belum ada pinjaman ditambahkan. Lacak pinjaman atau cicilan untuk melihat jumlah sebenarnya dan sisa saldo, lalu bayar setiap bulan.',remove_btn:'Hapus',edit_btn:'Ubah',months_3:'3 bulan',months_6:'6 bulan',months_12:'12 bulan',income_vs_expense:'Pemasukan vs Pengeluaran',savings_rate:'Tingkat tabungan',net_saved:'bersih ditabung',budget_performance:'Kinerja anggaran',of_budget_used:'anggaran bulan ini terpakai',top_spending_categories:'Kategori pengeluaran teratas',no_expenses_this_month:'Belum ada pengeluaran tercatat bulan ini.',export_csv:'Ekspor sebagai CSV',member_since:'Anggota sejak',currency_label:'Mata uang',manage_categories:'Kelola kategori',categories_count:'kategori',backup_export:'Cadangkan & ekspor data',notifications_label:'Notifikasi',on_word:'Aktif',off_word:'Nonaktif',about_app:'Tentang aplikasi',log_out:'Keluar',language_label:'Bahasa',add_transaction_title:'Tambah transaksi',category_label:'Kategori',note_optional:'Catatan (opsional)',date_label:'Tanggal',save_transaction_btn:'Simpan transaksi',add_category_title:'Tambah kategori',name_field:'Nama',icon_emoji:'Ikon (emoji)',color_label:'Warna',save_category_btn:'Simpan kategori',manage_categories_title:'Kelola kategori',add_category_btn:'Tambah kategori',add_loan_title:'Tambah pinjaman / cicilan',loan_name_field:'Nama pinjaman',total_loan_amount:'Jumlah total pinjaman',already_paid:'Jumlah yang sudah dibayar (opsional)',monthly_emi:'Jumlah cicilan bulanan',save_loan_btn:'Simpan pinjaman',edit_budget_title:'Ubah anggaran',save_limit_btn:'Simpan batas',choose_currency:'Pilih mata uang',choose_language:'Pilih bahasa',about_title:'Tentang',close_btn:'Tutup',transaction_added:'Transaksi ditambahkan',transaction_deleted:'Transaksi dihapus',enter_valid_amount:'Masukkan jumlah yang valid',category_added:'Kategori ditambahkan',category_deleted:'Kategori dihapus',need_one_category:'Anda memerlukan setidaknya satu kategori',loan_added:'Pinjaman ditambahkan',loan_removed:'Pinjaman dihapus',budget_updated:'Anggaran diperbarui',backup_exported:'Cadangan diekspor sebagai CSV',cat_food:'Makanan & Restoran',cat_transport:'Transportasi',cat_shopping:'Belanja',cat_bills:'Tagihan & Utilitas',cat_entertainment:'Hiburan',cat_health:'Kesehatan',cat_loan:'Pinjaman / Cicilan',cat_other:'Lainnya',reset_try_again:'Terjadi reset — silakan buka kembali dan coba lagi',something_wrong_saving:'Terjadi kesalahan saat menyimpan — silakan coba lagi',fill_loan_fields:'Isi nama, jumlah pinjaman, dan EMI',category_exists:'Kategori dengan nama itu sudah ada',enter_category_name:'Masukkan nama kategori',confirm_delete_category:'Hapus kategori ini? Transaksi yang ada di dalamnya akan ditampilkan sebagai Tidak Berkategori.',confirm_logout:'Keluar? Transaksi, anggaran, dan pinjaman Anda tetap tersimpan di perangkat ini — Anda hanya perlu melakukan pengaturan lagi.',cat_income:'Pemasukan'},
+es:{app_name:'Ahorro y Gasto',ob_tagline:'Controla ingresos, gastos y presupuestos — y sabe siempre cuánto es seguro gastar.',get_started:'Comenzar',tell_us_about_you:'Cuéntanos sobre ti',ob_sub2:'Esto personaliza tu ilustración de bienvenida.',male:'Hombre',female:'Mujer',continue_btn:'Continuar',back_btn:'Atrás',whats_your_name:'¿Cómo te llamamos?',ob_sub3:'Lo usaremos para saludarte en tu panel.',name_placeholder:'Tu nombre',create_account:'Crear mi cuenta',created_by:'Creado por',welcome_back:'Bienvenido de nuevo',balance:'Saldo',expenses:'Gastos',income:'Ingresos',savings:'Ahorros',this_week:'Esta semana',see_reports:'Ver informes',safe_to_spend:'Seguro para gastar',spent_this_month:'gastado este mes',earned_this_month:'ganado este mes',no_expenses_yet:'Aún no hay gastos registrados este mes.',no_income_yet:'Aún no hay ingresos registrados este mes.',tap_plus_to_add:'Toca el botón + para añadir uno.',banner_on_track:'Vas bien encaminado este mes. Sigue registrando tus transacciones a diario.',banner_over_budget:'Has superado tu presupuesto mensual. Revisa tus categorías.',nav_dashboard:'Panel',nav_transactions:'Transacciones',nav_budget:'Presupuesto',nav_reports:'Informes',nav_more:'Más',today:'Hoy',week:'Semana',month:'Mes',all:'Todo',net:'Neto',no_transactions:'No se encontraron transacciones.',loans_emis:'Préstamos y Cuotas',add_loan:'+ Añadir préstamo',category_budgets:'Presupuestos por categoría',spent_word:'Gastado',budget_word:'Presupuesto',on_track:'En buen camino',almost_there:'Casi en el límite',over_budget:'Presupuesto superado',no_limit_set:'Sin límite establecido',pay_this_month:'Pagar este mes',paid_for:'Pagado por',fully_paid_off:'Totalmente pagado',no_loans_yet:'Aún no se han añadido préstamos. Registra un préstamo o cuota para ver el monto real y el saldo restante, y págalo mes a mes.',remove_btn:'Eliminar',edit_btn:'Editar',months_3:'3 meses',months_6:'6 meses',months_12:'12 meses',income_vs_expense:'Ingresos vs Gastos',savings_rate:'Tasa de ahorro',net_saved:'ahorro neto',budget_performance:'Rendimiento del presupuesto',of_budget_used:'del presupuesto de este mes usado',top_spending_categories:'Principales categorías de gasto',no_expenses_this_month:'Aún no hay gastos registrados este mes.',export_csv:'Exportar como CSV',member_since:'Miembro desde',currency_label:'Moneda',manage_categories:'Gestionar categorías',categories_count:'categorías',backup_export:'Copia de seguridad y exportar datos',notifications_label:'Notificaciones',on_word:'Activado',off_word:'Desactivado',about_app:'Acerca de la app',log_out:'Cerrar sesión',language_label:'Idioma',add_transaction_title:'Añadir transacción',category_label:'Categoría',note_optional:'Nota (opcional)',date_label:'Fecha',save_transaction_btn:'Guardar transacción',add_category_title:'Añadir categoría',name_field:'Nombre',icon_emoji:'Icono (emoji)',color_label:'Color',save_category_btn:'Guardar categoría',manage_categories_title:'Gestionar categorías',add_category_btn:'Añadir categoría',add_loan_title:'Añadir préstamo / cuota',loan_name_field:'Nombre del préstamo',total_loan_amount:'Monto total del préstamo',already_paid:'Monto ya pagado hasta ahora (opcional)',monthly_emi:'Monto de la cuota mensual',save_loan_btn:'Guardar préstamo',edit_budget_title:'Editar presupuesto',save_limit_btn:'Guardar límite',choose_currency:'Elegir moneda',choose_language:'Elegir idioma',about_title:'Acerca de',close_btn:'Cerrar',transaction_added:'Transacción añadida',transaction_deleted:'Transacción eliminada',enter_valid_amount:'Introduce un monto válido',category_added:'Categoría añadida',category_deleted:'Categoría eliminada',need_one_category:'Necesitas al menos una categoría',loan_added:'Préstamo añadido',loan_removed:'Préstamo eliminado',budget_updated:'Presupuesto actualizado',backup_exported:'Copia de seguridad exportada como CSV',cat_food:'Comida y Restaurantes',cat_transport:'Transporte',cat_shopping:'Compras',cat_bills:'Facturas y Servicios',cat_entertainment:'Entretenimiento',cat_health:'Salud',cat_loan:'Préstamo / Cuota',cat_other:'Otros',reset_try_again:'Algo se reinició — vuelve a abrir e inténtalo de nuevo',something_wrong_saving:'Algo salió mal al guardar — inténtalo de nuevo',fill_loan_fields:'Completa el nombre, el monto del préstamo y la cuota',category_exists:'Ya existe una categoría con ese nombre',enter_category_name:'Introduce un nombre de categoría',confirm_delete_category:'¿Eliminar esta categoría? Las transacciones existentes en ella se mostrarán como Sin categoría.',confirm_logout:'¿Cerrar sesión? Tus transacciones, presupuestos y préstamos permanecen guardados en este dispositivo — solo tendrás que volver a configurar todo.',cat_income:'Ingresos'},
+fr:{app_name:'Épargne et Dépenses',ob_tagline:'Suivez vos revenus, dépenses et budgets — et sachez toujours combien il est sûr de dépenser.',get_started:'Commencer',tell_us_about_you:'Parlez-nous de vous',ob_sub2:"Cela personnalise votre illustration d'accueil.",male:'Homme',female:'Femme',continue_btn:'Continuer',back_btn:'Retour',whats_your_name:'Comment devons-nous vous appeler?',ob_sub3:'Nous l’utiliserons pour vous accueillir sur votre tableau de bord.',name_placeholder:'Votre nom',create_account:'Créer mon compte',created_by:'Créé par',welcome_back:'Bon retour',balance:'Solde',expenses:'Dépenses',income:'Revenus',savings:'Épargne',this_week:'Cette semaine',see_reports:'Voir les rapports',safe_to_spend:'Sûr à dépenser',spent_this_month:'dépensé ce mois-ci',earned_this_month:'gagné ce mois-ci',no_expenses_yet:"Aucune dépense enregistrée ce mois-ci pour l'instant.",no_income_yet:"Aucun revenu enregistré ce mois-ci pour l'instant.",tap_plus_to_add:'Appuyez sur le bouton + pour en ajouter une.',banner_on_track:'Vous êtes sur la bonne voie ce mois-ci. Continuez à enregistrer vos transactions chaque jour.',banner_over_budget:'Vous avez dépassé votre budget mensuel. Vérifiez vos catégories.',nav_dashboard:'Tableau de bord',nav_transactions:'Transactions',nav_budget:'Budget',nav_reports:'Rapports',nav_more:'Plus',today:"Aujourd'hui",week:'Semaine',month:'Mois',all:'Tout',net:'Net',no_transactions:'Aucune transaction trouvée.',loans_emis:'Prêts et Mensualités',add_loan:'+ Ajouter un prêt',category_budgets:'Budgets par catégorie',spent_word:'Dépensé',budget_word:'Budget',on_track:'Sur la bonne voie',almost_there:'Presque à la limite',over_budget:'Budget dépassé',no_limit_set:'Aucune limite définie',pay_this_month:'Payer ce mois-ci',paid_for:'Payé pour',fully_paid_off:'Entièrement remboursé',no_loans_yet:"Aucun prêt ajouté pour l'instant. Suivez un prêt ou une mensualité pour voir le montant réel et le solde restant, et payez-le mois après mois.",remove_btn:'Supprimer',edit_btn:'Modifier',months_3:'3 mois',months_6:'6 mois',months_12:'12 mois',income_vs_expense:'Revenus vs Dépenses',savings_rate:"Taux d'épargne",net_saved:'épargne nette',budget_performance:'Performance du budget',of_budget_used:'du budget de ce mois utilisé',top_spending_categories:'Principales catégories de dépenses',no_expenses_this_month:"Aucune dépense enregistrée ce mois-ci pour l'instant.",export_csv:'Exporter en CSV',member_since:'Membre depuis',currency_label:'Devise',manage_categories:'Gérer les catégories',categories_count:'catégories',backup_export:'Sauvegarder et exporter les données',notifications_label:'Notifications',on_word:'Activé',off_word:'Désactivé',about_app:"À propos de l'app",log_out:'Se déconnecter',language_label:'Langue',add_transaction_title:'Ajouter une transaction',category_label:'Catégorie',note_optional:'Note (optionnel)',date_label:'Date',save_transaction_btn:'Enregistrer la transaction',add_category_title:'Ajouter une catégorie',name_field:'Nom',icon_emoji:'Icône (emoji)',color_label:'Couleur',save_category_btn:'Enregistrer la catégorie',manage_categories_title:'Gérer les catégories',add_category_btn:'Ajouter une catégorie',add_loan_title:'Ajouter un prêt / mensualité',loan_name_field:'Nom du prêt',total_loan_amount:'Montant total du prêt',already_paid:'Montant déjà payé à ce jour (optionnel)',monthly_emi:'Montant de la mensualité',save_loan_btn:'Enregistrer le prêt',edit_budget_title:'Modifier le budget',save_limit_btn:'Enregistrer la limite',choose_currency:'Choisir la devise',choose_language:'Choisir la langue',about_title:'À propos',close_btn:'Fermer',transaction_added:'Transaction ajoutée',transaction_deleted:'Transaction supprimée',enter_valid_amount:'Entrez un montant valide',category_added:'Catégorie ajoutée',category_deleted:'Catégorie supprimée',need_one_category:"Vous avez besoin d'au moins une catégorie",loan_added:'Prêt ajouté',loan_removed:'Prêt supprimé',budget_updated:'Budget mis à jour',backup_exported:'Sauvegarde exportée en CSV',cat_food:'Nourriture et Restaurants',cat_transport:'Transport',cat_shopping:'Achats',cat_bills:'Factures et Services',cat_entertainment:'Divertissement',cat_health:'Santé',cat_loan:'Prêt / Mensualité',cat_other:'Autre',reset_try_again:'Une réinitialisation a eu lieu — veuillez rouvrir et réessayer',something_wrong_saving:"Une erreur est survenue lors de l'enregistrement — veuillez réessayer",fill_loan_fields:'Renseignez le nom, le montant du prêt et la mensualité',category_exists:'Une catégorie portant ce nom existe déjà',enter_category_name:'Entrez un nom de catégorie',confirm_delete_category:'Supprimer cette catégorie ? Les transactions existantes qu\'elle contient s\'afficheront comme Non classées.',confirm_logout:'Se déconnecter ? Vos transactions, budgets et prêts restent enregistrés sur cet appareil — vous devrez juste refaire la configuration.',cat_income:'Revenus'},
+zh:{app_name:'储蓄与支出',ob_tagline:'跟踪收入、支出和预算——随时了解可安全支配的金额。',get_started:'开始使用',tell_us_about_you:'介绍一下自己',ob_sub2:'这将个性化您的引导插图。',male:'男',female:'女',continue_btn:'继续',back_btn:'返回',whats_your_name:'我们该怎么称呼您？',ob_sub3:'我们将用它在您的仪表盘上问候您。',name_placeholder:'您的姓名',create_account:'创建我的账户',created_by:'创建者',welcome_back:'欢迎回来',balance:'余额',expenses:'支出',income:'收入',savings:'储蓄',this_week:'本周',see_reports:'查看报告',safe_to_spend:'可安全支配',spent_this_month:'本月已支出',earned_this_month:'本月已赚取',no_expenses_yet:'本月尚未记录任何支出。',no_income_yet:'本月尚未记录任何收入。',tap_plus_to_add:'点击 + 按钮添加一笔。',banner_on_track:'您本月进展顺利，继续每天记录交易吧。',banner_over_budget:'您已超出本月预算，请检查您的分类。',nav_dashboard:'仪表盘',nav_transactions:'交易',nav_budget:'预算',nav_reports:'报告',nav_more:'更多',today:'今天',week:'本周',month:'本月',all:'全部',net:'净额',no_transactions:'未找到任何交易。',loans_emis:'贷款与分期',add_loan:'+ 添加贷款',category_budgets:'分类预算',spent_word:'已支出',budget_word:'预算',on_track:'进展顺利',almost_there:'接近上限',over_budget:'超出预算',no_limit_set:'未设置限额',pay_this_month:'支付本月',paid_for:'已支付',fully_paid_off:'已全部还清',no_loans_yet:'尚未添加任何贷款。跟踪贷款或分期付款以查看实际金额和剩余余额，并按月支付。',remove_btn:'移除',edit_btn:'编辑',months_3:'3个月',months_6:'6个月',months_12:'12个月',income_vs_expense:'收入与支出对比',savings_rate:'储蓄率',net_saved:'净储蓄',budget_performance:'预算执行情况',of_budget_used:'本月预算已使用',top_spending_categories:'主要支出分类',no_expenses_this_month:'本月尚未记录任何支出。',export_csv:'导出为CSV',member_since:'加入时间',currency_label:'货币',manage_categories:'管理分类',categories_count:'个分类',backup_export:'备份和导出数据',notifications_label:'通知',on_word:'开',off_word:'关',about_app:'关于本应用',log_out:'退出登录',language_label:'语言',add_transaction_title:'添加交易',category_label:'分类',note_optional:'备注（可选）',date_label:'日期',save_transaction_btn:'保存交易',add_category_title:'添加分类',name_field:'名称',icon_emoji:'图标（表情符号）',color_label:'颜色',save_category_btn:'保存分类',manage_categories_title:'管理分类',add_category_btn:'添加分类',add_loan_title:'添加贷款/分期',loan_name_field:'贷款名称',total_loan_amount:'贷款总额',already_paid:'目前已还金额（可选）',monthly_emi:'每月分期金额',save_loan_btn:'保存贷款',edit_budget_title:'编辑预算',save_limit_btn:'保存限额',choose_currency:'选择货币',choose_language:'选择语言',about_title:'关于',close_btn:'关闭',transaction_added:'交易已添加',transaction_deleted:'交易已删除',enter_valid_amount:'请输入有效金额',category_added:'分类已添加',category_deleted:'分类已删除',need_one_category:'您至少需要一个分类',loan_added:'贷款已添加',loan_removed:'贷款已移除',budget_updated:'预算已更新',backup_exported:'备份已导出为CSV',cat_food:'餐饮美食',cat_transport:'交通出行',cat_shopping:'购物',cat_bills:'账单与水电',cat_entertainment:'娱乐',cat_health:'健康',cat_loan:'贷款/分期',cat_other:'其他',reset_try_again:'发生了重置，请重新打开并再试一次',something_wrong_saving:'保存时出现问题，请重试',fill_loan_fields:'请填写名称、贷款金额和月供',category_exists:'已存在同名分类',enter_category_name:'请输入分类名称',confirm_delete_category:'删除此分类？其中已有的交易将显示为未分类。',confirm_logout:'要退出登录吗？您的交易、预算和贷款仍会保存在此设备上——您只需要重新完成一次设置。',cat_income:'收入'},
+tr:{app_name:'Tasarruf ve Harcama',ob_tagline:'Gelir, gider ve bütçeleri takip edin — ve harcamak için ne kadarının güvenli olduğunu her zaman bilin.',get_started:'Başla',tell_us_about_you:'Bize kendinizden bahsedin',ob_sub2:'Bu, katılım illüstrasyonunuzu kişiselleştirir.',male:'Erkek',female:'Kadın',continue_btn:'Devam et',back_btn:'Geri',whats_your_name:'Size nasıl hitap edelim?',ob_sub3:'Bunu panonuzda sizi selamlamak için kullanacağız.',name_placeholder:'Adınız',create_account:'Hesabımı oluştur',created_by:'Oluşturan',welcome_back:'Tekrar hoş geldiniz',balance:'Bakiye',expenses:'Giderler',income:'Gelir',savings:'Tasarruf',this_week:'Bu hafta',see_reports:'Raporları gör',safe_to_spend:'Harcanması güvenli',spent_this_month:'bu ay harcandı',earned_this_month:'bu ay kazanıldı',no_expenses_yet:'Bu ay henüz gider kaydedilmedi.',no_income_yet:'Bu ay henüz gelir kaydedilmedi.',tap_plus_to_add:'Eklemek için + düğmesine dokunun.',banner_on_track:'Bu ay yolundasınız. Günlük işlem kaydetmeye devam edin.',banner_over_budget:'Aylık bütçenizi aştınız. Kategorilerinizi gözden geçirin.',nav_dashboard:'Pano',nav_transactions:'İşlemler',nav_budget:'Bütçe',nav_reports:'Raporlar',nav_more:'Diğer',today:'Bugün',week:'Hafta',month:'Ay',all:'Tümü',net:'Net',no_transactions:'İşlem bulunamadı.',loans_emis:'Krediler ve Taksitler',add_loan:'+ Kredi ekle',category_budgets:'Kategori bütçeleri',spent_word:'Harcanan',budget_word:'Bütçe',on_track:'Yolunda',almost_there:'Sınıra yaklaştı',over_budget:'Bütçe aşıldı',no_limit_set:'Limit belirlenmedi',pay_this_month:'Bu ay öde',paid_for:'Ödendi',fully_paid_off:'Tamamen ödendi',no_loans_yet:'Henüz kredi eklenmedi. Gerçek tutarı ve kalan bakiyeyi görmek için bir kredi veya taksit takip edin ve ay be ay ödeyin.',remove_btn:'Kaldır',edit_btn:'Düzenle',months_3:'3 ay',months_6:'6 ay',months_12:'12 ay',income_vs_expense:'Gelir ve Gider',savings_rate:'Tasarruf oranı',net_saved:'net tasarruf',budget_performance:'Bütçe performansı',of_budget_used:'bu ayın bütçesi kullanıldı',top_spending_categories:'En çok harcanan kategoriler',no_expenses_this_month:'Bu ay henüz gider kaydedilmedi.',export_csv:"CSV olarak dışa aktar",member_since:'Katılma tarihi',currency_label:'Para birimi',manage_categories:'Kategorileri yönet',categories_count:'kategori',backup_export:'Verileri yedekle ve dışa aktar',notifications_label:'Bildirimler',on_word:'Açık',off_word:'Kapalı',about_app:'Uygulama hakkında',log_out:'Çıkış yap',language_label:'Dil',add_transaction_title:'İşlem ekle',category_label:'Kategori',note_optional:'Not (isteğe bağlı)',date_label:'Tarih',save_transaction_btn:'İşlemi kaydet',add_category_title:'Kategori ekle',name_field:'Ad',icon_emoji:'Simge (emoji)',color_label:'Renk',save_category_btn:'Kategoriyi kaydet',manage_categories_title:'Kategorileri yönet',add_category_btn:'Kategori ekle',add_loan_title:'Kredi / taksit ekle',loan_name_field:'Kredi adı',total_loan_amount:'Toplam kredi tutarı',already_paid:'Şimdiye kadar ödenen tutar (isteğe bağlı)',monthly_emi:'Aylık taksit tutarı',save_loan_btn:'Krediyi kaydet',edit_budget_title:'Bütçeyi düzenle',save_limit_btn:'Limiti kaydet',choose_currency:'Para birimi seç',choose_language:'Dil seç',about_title:'Hakkında',close_btn:'Kapat',transaction_added:'İşlem eklendi',transaction_deleted:'İşlem silindi',enter_valid_amount:'Geçerli bir tutar girin',category_added:'Kategori eklendi',category_deleted:'Kategori silindi',need_one_category:'En az bir kategoriye ihtiyacınız var',loan_added:'Kredi eklendi',loan_removed:'Kredi kaldırıldı',budget_updated:'Bütçe güncellendi',backup_exported:'Yedek CSV olarak dışa aktarıldı',cat_food:'Yiyecek ve Restoranlar',cat_transport:'Ulaşım',cat_shopping:'Alışveriş',cat_bills:'Faturalar ve Hizmetler',cat_entertainment:'Eğlence',cat_health:'Sağlık',cat_loan:'Kredi / Taksit',cat_other:'Diğer',reset_try_again:'Bir şey sıfırlandı — lütfen yeniden açıp tekrar deneyin',something_wrong_saving:'Kaydederken bir şeyler ters gitti — lütfen tekrar deneyin',fill_loan_fields:'Ad, kredi tutarı ve taksiti girin',category_exists:'Bu ada sahip bir kategori zaten var',enter_category_name:'Bir kategori adı girin',confirm_delete_category:'Bu kategori silinsin mi? İçindeki mevcut işlemler Kategorisiz olarak görünecek.',confirm_logout:'Çıkış yapılsın mı? İşlemleriniz, bütçeleriniz ve krediniz bu cihazda saklı kalır — yalnızca kurulumu tekrar yapmanız gerekir.',cat_income:'Gelir'},
+};
+function t(key){
+  const lang = (typeof STATE !== 'undefined' && STATE.lang) || 'en';
+  return (TRANSLATIONS[lang] && TRANSLATIONS[lang][key]) || TRANSLATIONS.en[key] || key;
+}
+function categoryLabel(cat){
+  // Default categories get translated; custom user-added categories keep whatever the user typed
+  const key = 'cat_'+cat.id;
+  const isDefault = DEFAULT_CATEGORIES.some(c=>c.id===cat.id) || cat.id==='income';
+  return isDefault ? t(key) : cat.label;
+}
+function applyDirection(){
+  const lang = STATE.lang || 'en';
+  const isRtl = LANGUAGES[lang] && LANGUAGES[lang].rtl;
+  document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+  document.documentElement.lang = lang;
+}
+
+let STATE = {
+  profile:null,
+  transactions:[],
+  budgets:{},
+  loans:[],
+  categories:[],
+  lang:'en',
+  route:'onboarding',
+  ready:false,
+  ob:{step:0,gender:null,name:''},
+  txTab:'week',
+  dashTab:'expenses',
+  budgetMonth:new Date().getMonth(),
+  budgetYear:new Date().getFullYear(),
+  reportRange:'6m',
+  bannerDismissed:false,
+  modal:null,
+};
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function fmt(n){
+  const sym = CURRENCIES[(STATE.profile&&STATE.profile.currency)||'USD'];
+  const v = Math.abs(n);
+  return sym + v.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtShort(n){
+  const sym = CURRENCIES[(STATE.profile&&STATE.profile.currency)||'USD'];
+  return sym + Math.round(n).toLocaleString();
+}
+function dateLabel(iso){
+  const d = new Date(iso+'T00:00:00');
+  const t = new Date(todayISO()+'T00:00:00');
+  const diff = Math.round((t-d)/86400000);
+  if(diff===0) return 'Today';
+  if(diff===1) return 'Yesterday';
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+function defaultBudgets(cats){
+  const b={};
+  const list = cats || DEFAULT_CATEGORIES;
+  list.forEach((c,i)=>{ b[c.id] = [600,150,300,250,120,150,100][i] || 150; });
+  return b;
+}
+
+/* ===================== STORAGE ===================== */
+/* Hybrid persistence so the SAME file works correctly in every context:
+   1) Previewed inside Claude.ai (window.storage exists there, but localStorage is blocked)
+   2) Opened standalone in a real browser, as an installed PWA, or inside the
+      Capacitor Android/iOS app (window.storage doesn't exist, localStorage works)
+   3) Falls back to an in-memory store only if both are unavailable, so the app
+      never hangs or throws even in restrictive/private-mode contexts. */
+const memoryFallback = {};
+function hasClaudeStorage(){
+  return typeof window.storage === 'object' && window.storage !== null && typeof window.storage.get === 'function';
+}
+async function storageGet(key){
+  if(hasClaudeStorage()){
+    try{ return await window.storage.get(key); }catch(e){ /* fall through to localStorage */ }
+  }
+  try{
+    const raw = localStorage.getItem('ss_'+key);
+    return raw===null ? null : {key, value:raw};
+  }catch(e){
+    return (key in memoryFallback) ? {key, value:memoryFallback[key]} : null;
+  }
+}
+async function storageSet(key,value){
+  if(hasClaudeStorage()){
+    try{ await window.storage.set(key,value); return; }catch(e){ /* fall through to localStorage */ }
+  }
+  try{ localStorage.setItem('ss_'+key, value); }
+  catch(e){ memoryFallback[key]=value; }
+}
+async function storageDelete(key){
+  if(hasClaudeStorage()){
+    try{ await window.storage.delete(key); return; }catch(e){ /* fall through */ }
+  }
+  try{ localStorage.removeItem('ss_'+key); }catch(e){}
+  delete memoryFallback[key];
+}
+async function loadState(){
+  try{
+    const p = await storageGet('profile');
+    STATE.profile = p ? JSON.parse(p.value) : null;
+  }catch(e){ STATE.profile = null; }
+  try{
+    const t = await storageGet('transactions');
+    STATE.transactions = t ? JSON.parse(t.value) : [];
+  }catch(e){ STATE.transactions = []; }
+  try{
+    const cats = await storageGet('categories');
+    STATE.categories = cats ? JSON.parse(cats.value) : JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  }catch(e){ STATE.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)); }
+  try{
+    const b = await storageGet('budgets');
+    STATE.budgets = b ? JSON.parse(b.value) : defaultBudgets(STATE.categories);
+  }catch(e){ STATE.budgets = defaultBudgets(STATE.categories); }
+  try{
+    const l = await storageGet('loans');
+    STATE.loans = l ? JSON.parse(l.value) : [];
+  }catch(e){ STATE.loans = []; }
+  try{
+    const lg = await storageGet('lang');
+    STATE.lang = lg ? JSON.parse(lg.value) : 'en';
+  }catch(e){ STATE.lang = 'en'; }
+  applyDirection();
+  STATE.route = STATE.profile ? 'dashboard' : 'onboarding';
+  STATE.ready = true;
+  render();
+}
+async function persist(key,val){
+  try{ await storageSet(key, JSON.stringify(val)); }catch(e){ console.error('storage error',e); }
+}
+function saveProfile(){ persist('profile', STATE.profile); }
+function saveLoans(){ persist('loans', STATE.loans); }
+function saveTransactions(){ persist('transactions', STATE.transactions); }
+function saveBudgets(){ persist('budgets', STATE.budgets); }
+function saveCategories(){ persist('categories', STATE.categories); }
+function saveLang(){ persist('lang', STATE.lang); }
+
+/* ===================== ICONS ===================== */
+function icon(name,cls){
+  const paths = {
+    home:'<path d="M4 11.5 12 4l8 7.5V19a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1V11.5Z"/>',
+    list:'<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+    target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/>',
+    chart:'<path d="M5 20V11M12 20V4M19 20v-8"/>',
+    more:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    bell:'<path d="M6.5 9a5.5 5.5 0 1 1 11 0c0 4.2 1.5 5.5 1.5 5.5H5S6.5 13.2 6.5 9Z"/><path d="M10 18a2 2 0 0 0 4 0"/>',
+    close:'<path d="M6 6l12 12M18 6 6 18"/>',
+    trash:'<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6.5 7l.8 12a1 1 0 0 0 1 1h7.4a1 1 0 0 0 1-1l.8-12"/>',
+    download:'<path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M4 20h16"/>',
+    chevronL:'<path d="M15 6l-6 6 6 6"/>',
+    chevronR:'<path d="M9 6l6 6-6 6"/>',
+    user:'<circle cx="12" cy="8.5" r="3.5"/><path d="M4.5 20c0-4 3.5-6.5 7.5-6.5S19.5 16 19.5 20"/>',
+    wallet:'<path d="M4 8a2 2 0 0 1 2-2h11.5a1 1 0 0 1 1 1v2.2H6a2 2 0 0 1-2-2Z"/><path d="M4 8.2V17a2 2 0 0 0 2 2h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H5.5"/><circle cx="16" cy="13" r="1.2"/>',
+    currency:'<circle cx="12" cy="12" r="9"/><path d="M9 8.5h3.5a2 2 0 1 1 0 4H9m0 0h5m-5 0v3.5m0-3.5V8.5m0 7H14"/>',
+    tag:'<path d="M11.5 4H5a1 1 0 0 0-1 1v6.5a1 1 0 0 0 .3.7l8 8a1 1 0 0 0 1.4 0l6.5-6.5a1 1 0 0 0 0-1.4l-8-8a1 1 0 0 0-.7-.3Z"/><circle cx="8.2" cy="8.2" r="1.1"/>',
+    cloud:'<path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.7-1.7A4.2 4.2 0 0 1 17 18H7Z"/>',
+    info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 8v.01"/>',
+    check:'<path d="M5 12.5l4.5 4.5L19 7"/>',
+    calendar:'<rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8 3.5v3M16 3.5v3"/>',
+  };
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="'+(cls||'icon')+'">'+(paths[name]||'')+'</svg>';
+}
+function brandmarkSVG(){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:56%;height:56%">'+ '<path d="M4 8a2 2 0 0 1 2-2h11.5a1 1 0 0 1 1 1v2.2H6a2 2 0 0 1-2-2Z"/><path d="M4 8.2V17a2 2 0 0 0 2 2h12a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H5.5"/><circle cx="16" cy="13" r="1.2" fill="white"/>' +'</svg>';
+}
+function genderIllustration(g){
+  if(g==='female'){
+    return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#EFEBFF"/><circle cx="50" cy="38" r="16" fill="#FFD9C4"/><path d="M34 34c0-10 7-18 16-18s16 8 16 18c0-4-2-9-6-9-3 6-13 6-20 2-3 4-6 5-6 7Z" fill="#4A3B2A"/><path d="M28 90c2-18 10-26 22-26s20 8 22 26" fill="#7B61FF"/><rect x="40" y="60" width="20" height="14" rx="4" fill="#2EC4B6"/></svg>';
+  }
+  return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#E4FBF8"/><circle cx="50" cy="38" r="16" fill="#FFD9C4"/><path d="M34 32c0-9 7-15 16-15s16 6 16 15c-2-2-5-3-8-3-6 0-16 1-24 3Z" fill="#2B2320"/><path d="M28 90c2-17 10-25 22-25s20 8 22 25" fill="#2EC4B6"/><rect x="40" y="59" width="20" height="14" rx="4" fill="#7B61FF"/></svg>';
+}
+
+/* ===================== DERIVED DATA HELPERS ===================== */
+function txnsInRange(startISO,endISO){
+  return STATE.transactions.filter(t=> t.date>=startISO && t.date<=endISO);
+}
+function monthRange(y,m){
+  const start = new Date(y,m,1);
+  const end = new Date(y,m+1,0);
+  return {start:start.toISOString().slice(0,10), end:end.toISOString().slice(0,10), daysInMonth:end.getDate()};
+}
+function sumBy(list,type){
+  return list.filter(t=>t.type===type).reduce((s,t)=>s+t.amount,0);
+}
+function weekDates(){
+  const days=[];
+  const now = new Date();
+  for(let i=6;i>=0;i--){
+    const d = new Date(now); d.setDate(now.getDate()-i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+
+/* ===================== RENDER ROOT ===================== */
+function render(){
+  const app = document.getElementById('app');
+  if(!STATE.ready){ app.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;color:#6B7280;font-family:Inter,sans-serif;">Loading…</div>'; return; }
+  applyDirection();
+  if(STATE.route==='onboarding'){
+    app.innerHTML = renderOnboarding();
+    attachOnboardingEvents();
+    if(STATE.modal) renderModal();
+    return;
+  }
+  app.innerHTML = renderShell();
+  attachShellEvents();
+  if(STATE.modal) renderModal();
+}
+
+/* ===================== ONBOARDING ===================== */
+function renderOnboarding(){
+  const ob = STATE.ob;
+  let inner = '';
+  if(ob.step===0){
+    inner = `
+      <div class="brandmark">${brandmarkSVG()}</div>
+      <button id="ob-lang-btn" style="background:var(--card);border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-size:12.5px;font-weight:700;color:var(--text2);margin-bottom:16px;">🌐 ${LANGUAGES[STATE.lang].name}</button>
+      <h1 class="onboard-title">${t('app_name')}</h1>
+      <p class="onboard-sub">${t('ob_tagline')}</p>
+      <div class="dots">${[0,1,2].map(i=>`<div class="dot ${i===0?'active':''}"></div>`).join('')}</div>
+      <button class="btn-primary" id="ob-start">${t('get_started')}</button>
+      <p style="margin-top:22px;font-size:11.5px;color:var(--text2);opacity:.7;">${t('created_by')} Asrar Ahmed Junedi</p>
+    `;
+  } else if(ob.step===1){
+    inner = `
+      <div style="width:120px;height:120px;margin-bottom:22px;">${genderIllustration(ob.gender||'male')}</div>
+      <h1 class="onboard-title">${t('tell_us_about_you')}</h1>
+      <p class="onboard-sub">${t('ob_sub2')}</p>
+      <div class="gender-row">
+        <button class="gender-card ${ob.gender==='male'?'selected':''}" data-g="male">${genderIllustration('male')}<span>${t('male')}</span></button>
+        <button class="gender-card ${ob.gender==='female'?'selected':''}" data-g="female">${genderIllustration('female')}<span>${t('female')}</span></button>
+      </div>
+      <div class="dots">${[0,1,2].map(i=>`<div class="dot ${i===1?'active':''}"></div>`).join('')}</div>
+      <button class="btn-primary" id="ob-next" ${!ob.gender?'disabled':''}>${t('continue_btn')}</button>
+      <button class="btn-ghost" id="ob-back">${t('back_btn')}</button>
+    `;
+  } else {
+    inner = `
+      <div style="width:96px;height:96px;margin-bottom:18px;">${genderIllustration(ob.gender)}</div>
+      <h1 class="onboard-title">${t('whats_your_name')}</h1>
+      <p class="onboard-sub">${t('ob_sub3')}</p>
+      <input class="name-input" id="ob-name" placeholder="${t('name_placeholder')}" value="${ob.name||''}" maxlength="24"/>
+      <div class="dots">${[0,1,2].map(i=>`<div class="dot ${i===2?'active':''}"></div>`).join('')}</div>
+      <button class="btn-primary" id="ob-finish" ${!ob.name?'disabled':''}>${t('create_account')}</button>
+      <button class="btn-ghost" id="ob-back2">${t('back_btn')}</button>
+    `;
+  }
+  return `<div class="onboard">${inner}</div>`;
+}
+function attachOnboardingEvents(){
+  const ob = STATE.ob;
+  const langBtn = document.getElementById('ob-lang-btn');
+  if(langBtn) langBtn.onclick=()=> openModal('language');
+  const start = document.getElementById('ob-start');
+  if(start) start.onclick=()=>{ ob.step=1; render(); };
+  document.querySelectorAll('.gender-card').forEach(el=>{
+    el.onclick=()=>{ ob.gender=el.dataset.g; render(); };
+  });
+  const next = document.getElementById('ob-next');
+  if(next) next.onclick=()=>{ if(ob.gender){ ob.step=2; render(); } };
+  const back = document.getElementById('ob-back');
+  if(back) back.onclick=()=>{ ob.step=0; render(); };
+  const back2 = document.getElementById('ob-back2');
+  if(back2) back2.onclick=()=>{ ob.step=1; render(); };
+  const nameInput = document.getElementById('ob-name');
+  if(nameInput){
+    nameInput.oninput=()=>{ ob.name=nameInput.value; const btn=document.getElementById('ob-finish'); if(btn) btn.disabled=!ob.name; };
+    nameInput.focus();
+  }
+  const finish = document.getElementById('ob-finish');
+  if(finish) finish.onclick=()=>{
+    if(!ob.name) return;
+    STATE.profile = { name:ob.name.trim(), gender:ob.gender, currency:'USD', notifications:true, createdAt:todayISO() };
+    saveProfile();
+    STATE.route='dashboard';
+    render();
+  };
+}
+
+/* ===================== SHELL (nav wrapper) ===================== */
+const NAV_ITEMS = [
+  {id:'dashboard',labelKey:'nav_dashboard',icon:'home'},
+  {id:'transactions',labelKey:'nav_transactions',icon:'list'},
+  {id:'budget',labelKey:'nav_budget',icon:'target'},
+  {id:'reports',labelKey:'nav_reports',icon:'chart'},
+  {id:'more',labelKey:'nav_more',icon:'more'},
+];
+function renderShell(){
+  const route = STATE.route;
+  let pageHTML = '';
+  let title = '', eyebrow='';
+  if(route==='dashboard'){ pageHTML = renderDashboard(); eyebrow=t('welcome_back'); title = STATE.profile.name; }
+  else if(route==='transactions'){ pageHTML = renderTransactions(); eyebrow=t('nav_transactions'); title=t('nav_transactions'); }
+  else if(route==='budget'){ pageHTML = renderBudget(); eyebrow=t('nav_budget'); title=t('nav_budget'); }
+  else if(route==='reports'){ pageHTML = renderReports(); eyebrow=t('nav_reports'); title=t('nav_reports'); }
+  else if(route==='more'){ pageHTML = renderMore(); eyebrow=t('nav_more'); title=t('nav_more'); }
+
+  return `
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="sidebar-logo"><div class="brandmark">${brandmarkSVG()}</div><span>${t('app_name')}</span></div>
+      ${NAV_ITEMS.map(n=>`<button class="nav-item ${route===n.id?'active':''}" data-route="${n.id}">${icon(n.icon,'icon-sm')}<span>${t(n.labelKey)}</span></button>`).join('')}
+      <div class="sidebar-footer">
+        <div class="avatar-sm">${icon('user','icon-sm')}</div>
+        <div>
+          <div style="font-weight:700;font-size:13px;">${STATE.profile.name}</div>
+          <div style="font-size:11.5px;color:var(--text2);">${STATE.profile.currency}</div>
+        </div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div><div class="greet-eyebrow">${eyebrow}</div><div class="greet-name">${title}</div></div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          ${route==='transactions'?`<button class="fab-desktop" id="btn-add-desktop">${icon('plus','icon-sm')} ${t('add_transaction_title')}</button>`:''}
+          <button class="icon-btn" id="btn-bell">${icon('bell')}</button>
+        </div>
+      </div>
+      <div class="page">${pageHTML}</div>
+    </div>
+    <button class="fab" id="btn-fab">${icon('plus')}</button>
+    <nav class="bottomnav">
+      ${NAV_ITEMS.map(n=>`<button class="bnav-item ${route===n.id?'active':''}" data-route="${n.id}">${icon(n.icon)}<span>${t(n.labelKey)}</span></button>`).join('')}
+    </nav>
+  </div>`;
+}
+
+/* ===================== DASHBOARD ===================== */
+function renderDashboard(){
+  const today = todayISO();
+  const now = new Date();
+  const {start:mStart,end:mEnd} = monthRange(now.getFullYear(),now.getMonth());
+  const monthTx = txnsInRange(mStart,mEnd);
+  const income = sumBy(monthTx,'income');
+  const expense = sumBy(monthTx,'expense');
+  const savings = income - expense;
+  const totalBudget = Object.values(STATE.budgets).reduce((a,b)=>a+b,0);
+  const pctUsed = totalBudget>0 ? Math.min(1, expense/totalBudget) : 0;
+  const safeToSpend = Math.max(0, totalBudget - expense);
+
+  const r=70, c=2*Math.PI*r;
+  const dash = pctUsed*c;
+  const gaugeColor = pctUsed<0.7?'var(--teal)':pctUsed<0.95?'var(--amber)':'var(--red)';
+
+  const wDates = weekDates();
+  const wSpend = wDates.map(d=> sumBy(txnsInRange(d,d),'expense'));
+  const maxW = Math.max(1,...wSpend);
+  const dayLetters = wDates.map(d=> 'SMTWTFS'[new Date(d+'T00:00:00').getDay()]);
+
+  const catTotalsAll = STATE.categories.map(c=>({...c, total: sumBy(monthTx.filter(t=>t.category===c.id),'expense')}))
+    .filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+  const dashTab = STATE.dashTab || 'expenses';
+  const donutTotal = dashTab==='expenses' ? expense : income;
+  const donutRows = dashTab==='expenses' ? catTotalsAll
+    : (income>0 ? [{id:'income',label:t('cat_income'),icon:'💰',color:'#2EC4B6',bg:'#E4FBF8',total:income}] : []);
+
+  return `
+    ${!STATE.bannerDismissed ? `
+    <div class="banner">
+      <p>${expense>totalBudget && totalBudget>0 ? t('banner_over_budget') : t('banner_on_track')}</p>
+      <button class="close" id="banner-close">${icon('close','icon-sm')}</button>
+    </div>` : ''}
+
+    <div class="balance-card">
+      <div class="balance-eyebrow">${t('balance')}</div>
+      <div class="balance-amount">${fmtShort(savings)} <button id="balance-edit">${icon('plus','icon-sm')}</button></div>
+      <div class="balance-tabs">
+        <button class="balance-tab ${dashTab==='expenses'?'active':''}" data-dashtab="expenses">${t('expenses')}</button>
+        <button class="balance-tab ${dashTab==='income'?'active':''}" data-dashtab="income">${t('income')}</button>
+      </div>
+    </div>
+
+    <div class="card donut-card">
+      <svg viewBox="0 0 180 180" style="width:200px;height:200px;">
+        ${donutRows.length ? donutSegments(donutRows, donutTotal) : `<circle cx="90" cy="90" r="70" fill="none" stroke="var(--bg)" stroke-width="22"/>`}
+      </svg>
+      <div class="donut-center">
+        <div class="donut-amount">${fmtShort(donutTotal)}</div>
+        <div class="donut-sub">${dashTab==='expenses'?t('spent_this_month'):t('earned_this_month')}</div>
+      </div>
+      ${donutRows.length ? donutRows.slice(0,6).map(c=>`
+        <div class="cat-row">
+          <div class="cat-icon" style="background:${c.bg};">${c.icon}</div>
+          <div class="cat-info"><div class="cat-name">${categoryLabel(c)}</div></div>
+          <div style="text-align:right;">
+            <div style="font-size:12px;font-weight:700;color:var(--text2);">${Math.round((c.total/(donutTotal||1))*100)}%</div>
+            <div class="cat-amount ${dashTab==='expenses'?'neg':'pos'}">${dashTab==='expenses'?'-':'+'}${fmtShort(c.total)}</div>
+          </div>
+        </div>`).join('') : `<div class="empty">${icon('tag')}<p>${dashTab==='expenses'?t('no_expenses_yet'):t('no_income_yet')}<br>${t('tap_plus_to_add')}</p></div>`}
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-cell income"><div class="sc-label">${t('income')}</div><div class="sc-value">${fmtShort(income)}</div></div>
+      <div class="summary-cell expense"><div class="sc-label">${t('expenses')}</div><div class="sc-value">${fmtShort(expense)}</div></div>
+      <div class="summary-cell savings"><div class="sc-label">${t('savings')}</div><div class="sc-value">${fmtShort(savings)}</div></div>
+    </div>
+
+    <div class="section-title">${t('this_week')} <span class="link" data-route="reports">${t('see_reports')}</span></div>
+    <div class="card">
+      <div class="gauge-label" style="margin-bottom:0;">${t('safe_to_spend')}: <b style="color:var(--text)">${fmtShort(safeToSpend)}</b></div>
+      <div class="weekbar">
+        ${wDates.map((d,i)=>{
+          const h = Math.round(6 + (wSpend[i]/maxW)*48);
+          const isToday = d===today;
+          return `<div class="weekday ${isToday?'today':''}"><div class="bar-track"><div class="bar-fill" style="height:${h}px"></div></div><span>${dayLetters[i]}</span></div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+function donutSegments(rows,total){
+  const r=70,c=2*Math.PI*r;
+  let offset=0;
+  return rows.map(row=>{
+    const frac = total>0 ? row.total/total : 0;
+    const len = Math.max(0,frac*c);
+    const seg = `<circle cx="90" cy="90" r="${r}" fill="none" stroke="${row.color}" stroke-width="24" stroke-dasharray="${len} ${c-len}" stroke-dashoffset="${-offset}" transform="rotate(-90 90 90)" stroke-linecap="butt"/>`;
+    offset += len;
+    return seg;
+  }).join('');
+}
+
+/* ===================== TRANSACTIONS ===================== */
+function renderTransactions(){
+  const now = new Date();
+  let list;
+  if(STATE.txTab==='today'){
+    list = txnsInRange(todayISO(),todayISO());
+  } else if(STATE.txTab==='week'){
+    const wd = weekDates(); list = txnsInRange(wd[0],wd[6]);
+  } else if(STATE.txTab==='month'){
+    const {start,end} = monthRange(now.getFullYear(),now.getMonth()); list = txnsInRange(start,end);
+  } else {
+    list = STATE.transactions.slice();
+  }
+  const income = sumBy(list,'income'), expense = sumBy(list,'expense');
+  const sorted = list.slice().sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt-a.createdAt );
+  const groups = {};
+  sorted.forEach(t=>{ (groups[t.date]=groups[t.date]||[]).push(t); });
+  const dateKeys = Object.keys(groups).sort((a,b)=>b.localeCompare(a));
+  const tabKeys = {today:'today',week:'week',month:'month',all:'all'};
+
+  return `
+    <div class="tabs">
+      ${['today','week','month','all'].map(k=>`<button class="tab-btn ${STATE.txTab===k?'active':''}" data-txtab="${k}">${t(tabKeys[k])}</button>`).join('')}
+    </div>
+    <div class="totals-bar">
+      <div class="t-cell"><div class="t-label">${t('income')}</div><div class="t-val" style="color:var(--teal)">${fmtShort(income)}</div></div>
+      <div class="t-cell"><div class="t-label">${t('expenses')}</div><div class="t-val" style="color:var(--red)">${fmtShort(expense)}</div></div>
+      <div class="t-cell"><div class="t-label">${t('net')}</div><div class="t-val">${fmtShort(income-expense)}</div></div>
+    </div>
+    ${dateKeys.length? dateKeys.map(dk=>`
+      <div class="date-group-label">${dateLabel(dk)}</div>
+      ${groups[dk].map(tx=>{
+        const c = catById(tx.category);
+        const cLabel = categoryLabel(c);
+        return `<div class="txn-item">
+          <div class="cat-icon" style="background:${c.bg}">${c.icon}</div>
+          <div class="cat-info"><div class="cat-name">${tx.note? tx.note : cLabel}</div><div class="cat-sub">${cLabel}</div></div>
+          <div class="cat-amount ${tx.type==='income'?'pos':'neg'}">${tx.type==='income'?'+':'-'}${fmtShort(tx.amount)}</div>
+          <button class="txn-del" data-del="${tx.id}">${icon('trash','icon-sm')}</button>
+        </div>`;
+      }).join('')}
+    `).join('') : `<div class="empty">${icon('list')}<p>${t('no_transactions')}<br>${t('tap_plus_to_add')}</p></div>`}
+  `;
+}
+
+/* ===================== BUDGET ===================== */
+function renderBudget(){
+  const y = STATE.budgetYear, m = STATE.budgetMonth;
+  const {start,end,daysInMonth} = monthRange(y,m);
+  const monthTx = txnsInRange(start,end).filter(tx=>tx.type==='expense');
+  const monthLabel = new Date(y,m,1).toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const totalBudget = Object.values(STATE.budgets).reduce((a,b)=>a+b,0);
+  const totalSpent = sumBy(monthTx,'expense');
+
+  // build cumulative line chart data (daily cumulative spend vs flat budget line)
+  const dayNum = new Date().getMonth()===m && new Date().getFullYear()===y ? new Date().getDate() : daysInMonth;
+  const dailyTotals = new Array(daysInMonth+1).fill(0);
+  monthTx.forEach(tx=>{ const d = parseInt(tx.date.slice(8,10),10); dailyTotals[d]+=tx.amount; });
+  let cum=0; const cumArr=[];
+  for(let d=1; d<=daysInMonth; d++){ cum+=dailyTotals[d]; cumArr.push(cum); }
+  const maxY = Math.max(totalBudget, cum, 1);
+  const W=300,H=110;
+  const pts = cumArr.map((v,i)=>{
+    const x = (i/(daysInMonth-1))*W;
+    const yv = H - (v/maxY)*H;
+    return x+','+yv;
+  }).join(' ');
+  const budgetY = H - (totalBudget/maxY)*H;
+
+  const catCards = STATE.categories.map(c=>{
+    const spent = sumBy(monthTx.filter(tx=>tx.category===c.id),'expense');
+    const limit = STATE.budgets[c.id]||0;
+    const pct = limit>0? Math.min(1,spent/limit) : 0;
+    let status, statusClass;
+    if(limit===0){ status=t('no_limit_set'); statusClass='ok'; }
+    else if(pct<0.7){ status=t('on_track'); statusClass='ok'; }
+    else if(pct<1){ status=t('almost_there'); statusClass='warn'; }
+    else { status=t('over_budget'); statusClass='over'; }
+    return `<div class="budget-card">
+      <div class="bc-top">
+        <div class="cat-icon" style="background:${c.bg}">${c.icon}</div>
+        <div class="bc-title">${categoryLabel(c)}</div>
+        <button class="edit-limit" data-editbudget="${c.id}">${t('edit_btn')}</button>
+      </div>
+      <div class="bc-nums" style="margin-bottom:8px;">${fmtShort(spent)} / ${fmtShort(limit)}</div>
+      <div class="progress-track"><div class="progress-fill" style="width:${Math.round(pct*100)}%;background:${statusClass==='ok'?'var(--teal)':statusClass==='warn'?'var(--amber)':'var(--red)'}"></div></div>
+      <div class="bc-status ${statusClass}">${status}</div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="month-selector">
+      <button data-monthnav="-1">${icon('chevronL','icon-sm')}</button>
+      <div class="m-label">${monthLabel}</div>
+      <button data-monthnav="1">${icon('chevronR','icon-sm')}</button>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <div><div class="sc-label" style="font-size:11px;color:var(--text2);font-weight:700;">${t('spent_word').toUpperCase()}</div><div style="font-weight:800;font-size:18px;">${fmtShort(totalSpent)}</div></div>
+        <div style="text-align:right;"><div class="sc-label" style="font-size:11px;color:var(--text2);font-weight:700;">${t('budget_word').toUpperCase()}</div><div style="font-weight:800;font-size:18px;">${fmtShort(totalBudget)}</div></div>
+      </div>
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;height:110px;overflow:visible;">
+        <line x1="0" y1="${budgetY}" x2="${W}" y2="${budgetY}" stroke="var(--line)" stroke-width="2" stroke-dasharray="4 4"/>
+        <polyline points="${pts}" fill="none" stroke="${totalSpent>totalBudget?'var(--red)':'var(--purple)'}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="section-title">${t('loans_emis')} <span class="link" id="btn-add-loan" style="cursor:pointer;">${t('add_loan')}</span></div>
+    ${STATE.loans.length ? STATE.loans.map(l=>{
+      const paidPct = l.total>0 ? Math.min(1,(l.total-l.remaining)/l.total) : 0;
+      const ym = todayISO().slice(0,7);
+      const paidThisMonth = l.lastPaidMonth===ym;
+      const monthNow = new Date().toLocaleDateString(undefined,{month:'long',year:'numeric'});
+      const payAmount = Math.min(l.emi, l.remaining);
+      const isPaidOff = l.remaining<=0;
+      return `<div class="budget-card">
+        <div class="bc-top">
+          <div class="cat-icon" style="background:#F2E7DC">🏦</div>
+          <div class="bc-title">${l.name}</div>
+          <button class="edit-limit" data-delloan="${l.id}">${t('remove_btn')}</button>
+        </div>
+        <div class="bc-nums" style="margin-bottom:8px;">${t('total_loan_amount')}: <b style="color:var(--text)">${fmtShort(l.total)}</b> &nbsp;•&nbsp; <b style="color:var(--text)">${fmtShort(l.remaining)}</b></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${Math.round(paidPct*100)}%;background:var(--purple)"></div></div>
+        <div class="bc-status ${isPaidOff?'ok':'warn'}" style="margin-bottom:12px;">${isPaidOff? t('fully_paid_off')+' 🎉' : Math.round(paidPct*100)+'% · EMI '+fmtShort(l.emi)}</div>
+        ${isPaidOff? '' : `<button class="btn-primary" style="max-width:none;padding:12px;font-size:13.5px;" data-payloan="${l.id}" ${paidThisMonth?'disabled':''}>${paidThisMonth? t('paid_for')+' '+monthNow+' ✓' : t('pay_this_month')+' — '+fmtShort(payAmount)}</button>`}
+      </div>`;
+    }).join('') : `<div class="card"><div class="empty">${icon('wallet')}<p>${t('no_loans_yet')}</p></div></div>`}
+
+    <div class="section-title">${t('category_budgets')}</div>
+    ${catCards}
+  `;
+}
+
+/* ===================== REPORTS ===================== */
+function renderReports(){
+  const now = new Date();
+  const range = STATE.reportRange;
+  const months = range==='3m'?3:range==='6m'?6:12;
+  const monthData = [];
+  for(let i=months-1;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const {start,end} = monthRange(d.getFullYear(),d.getMonth());
+    const tx = txnsInRange(start,end);
+    monthData.push({ label:d.toLocaleDateString(undefined,{month:'short'}), income:sumBy(tx,'income'), expense:sumBy(tx,'expense') });
+  }
+  const maxVal = Math.max(1,...monthData.map(m=>Math.max(m.income,m.expense)));
+  const totalIncome = monthData.reduce((s,m)=>s+m.income,0);
+  const totalExpense = monthData.reduce((s,m)=>s+m.expense,0);
+  const savingsRate = totalIncome>0? Math.round(((totalIncome-totalExpense)/totalIncome)*100) : 0;
+
+  const {start:mStart,end:mEnd} = monthRange(now.getFullYear(),now.getMonth());
+  const monthTx = txnsInRange(mStart,mEnd).filter(tx=>tx.type==='expense');
+  const catTotals = STATE.categories.map(c=>({...c,total:sumBy(monthTx.filter(tx=>tx.category===c.id),'expense')}))
+    .filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+
+  const barW = 22, gap = 14, chartW = monthData.length*(barW*2+gap), chartH=140;
+
+  return `
+    <div class="filter-row">
+      ${[['3m','months_3'],['6m','months_6'],['12m','months_12']].map(([k,lk])=>`<button class="filter-chip ${range===k?'active':''}" data-report-range="${k}">${t(lk)}</button>`).join('')}
+    </div>
+    <div class="card" style="margin-top:16px;overflow-x:auto;">
+      <div class="section-title" style="margin-top:0;"><span>${t('income_vs_expense')}</span></div>
+      <svg viewBox="0 0 ${chartW} ${chartH+24}" style="width:100%;min-width:${chartW}px;height:${chartH+24}px;">
+        ${monthData.map((m,i)=>{
+          const x = i*(barW*2+gap);
+          const ih = (m.income/maxVal)*chartH, eh=(m.expense/maxVal)*chartH;
+          return `
+            <rect x="${x}" y="${chartH-ih}" width="${barW}" height="${ih}" rx="5" fill="var(--teal)"/>
+            <rect x="${x+barW+3}" y="${chartH-eh}" width="${barW}" height="${eh}" rx="5" fill="var(--red)"/>
+            <text x="${x+barW+1.5}" y="${chartH+18}" font-size="10.5" fill="#6B7280" text-anchor="middle" font-family="Inter">${m.label}</text>
+          `;
+        }).join('')}
+      </svg>
+      <div style="display:flex;gap:18px;margin-top:8px;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:600;"><span style="width:10px;height:10px;border-radius:3px;background:var(--teal);display:inline-block;"></span>${t('income')}</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);font-weight:600;"><span style="width:10px;height:10px;border-radius:3px;background:var(--red);display:inline-block;"></span>${t('expenses')}</div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px;">
+      <div class="card">
+        <div class="sc-label" style="font-size:11px;font-weight:700;color:var(--text2);">${t('savings_rate').toUpperCase()} (${months}mo)</div>
+        <div style="font-size:28px;font-weight:800;margin-top:6px;color:${savingsRate>=0?'var(--teal)':'var(--red)'}">${savingsRate}%</div>
+        <div style="font-size:12.5px;color:var(--text2);margin-top:4px;">${fmtShort(totalIncome-totalExpense)} ${t('net_saved')}</div>
+      </div>
+      <div class="card">
+        <div class="sc-label" style="font-size:11px;font-weight:700;color:var(--text2);">${t('budget_performance').toUpperCase()}</div>
+        <div style="font-size:28px;font-weight:800;margin-top:6px;">${Object.values(STATE.budgets).reduce((a,b)=>a+b,0)>0? Math.round((sumBy(monthTx,'expense')/Object.values(STATE.budgets).reduce((a,b)=>a+b,0))*100):0}%</div>
+        <div style="font-size:12.5px;color:var(--text2);margin-top:4px;">${t('of_budget_used')}</div>
+      </div>
+    </div>
+
+    <div class="section-title">${t('top_spending_categories')}</div>
+    <div class="card" style="padding:6px 16px;">
+      ${catTotals.length? catTotals.map(c=>`
+        <div class="cat-row">
+          <div class="cat-icon" style="background:${c.bg};">${c.icon}</div>
+          <div class="cat-info"><div class="cat-name">${categoryLabel(c)}</div></div>
+          <div class="cat-amount neg">-${fmtShort(c.total)}</div>
+        </div>`).join('') : `<div class="empty"><p>${t('no_expenses_this_month')}</p></div>`}
+    </div>
+
+    <button class="export-btn" id="btn-export">${icon('download','icon-sm')} ${t('export_csv')}</button>
+  `;
+}
+
+/* ===================== MORE / SETTINGS ===================== */
+function renderMore(){
+  const p = STATE.profile;
+  return `
+    <div class="card">
+      <div class="profile-card">
+        <div class="avatar-lg">${icon('user')}</div>
+        <div><div class="p-name">${p.name}</div><div class="p-sub">${t('member_since')} ${new Date(p.createdAt).toLocaleDateString(undefined,{month:'long',year:'numeric'})}</div></div>
+      </div>
+      <button class="setting-row" data-more="language">
+        <div class="s-icon">${icon('info','icon-sm')}</div>
+        <div class="s-label">${t('language_label')}</div>
+        <div class="s-val">${LANGUAGES[STATE.lang].name}</div>
+      </button>
+      <button class="setting-row" data-more="currency">
+        <div class="s-icon">${icon('currency','icon-sm')}</div>
+        <div class="s-label">${t('currency_label')}</div>
+        <div class="s-val">${p.currency}</div>
+      </button>
+      <button class="setting-row" data-more="categories">
+        <div class="s-icon">${icon('tag','icon-sm')}</div>
+        <div class="s-label">${t('manage_categories')}</div>
+        <div class="s-val">${STATE.categories.length} ${t('categories_count')}</div>
+      </button>
+      <button class="setting-row" data-more="backup">
+        <div class="s-icon">${icon('cloud','icon-sm')}</div>
+        <div class="s-label">${t('backup_export')}</div>
+      </button>
+      <button class="setting-row" data-more="notif">
+        <div class="s-icon">${icon('bell','icon-sm')}</div>
+        <div class="s-label">${t('notifications_label')}</div>
+        <div class="s-val">${p.notifications?t('on_word'):t('off_word')}</div>
+      </button>
+      <button class="setting-row" data-more="about">
+        <div class="s-icon">${icon('info','icon-sm')}</div>
+        <div class="s-label">${t('about_app')}</div>
+      </button>
+      <button class="setting-row" data-more="logout">
+        <div class="s-icon" style="color:var(--red);">${icon('close','icon-sm')}</div>
+        <div class="s-label" style="color:var(--red);">${t('log_out')}</div>
+      </button>
+    </div>
+    <p style="text-align:center;color:var(--text2);font-size:11.5px;margin-top:22px;opacity:.7;">${t('app_name')} — ${t('created_by')} Asrar Ahmed Junedi</p>
+  `;
+}
+
+/* ===================== MODAL ===================== */
+function renderModal(){
+  document.querySelectorAll('#modal-overlay').forEach(function(o){o.remove();});
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'modal-overlay';
+  const type = STATE.modal.type;
+
+  if(type==='add-transaction'){
+    const d = STATE.modal.data;
+    overlay.innerHTML = `
+      <div class="modal-sheet" style="display:flex;flex-direction:column;padding-bottom:0;">
+        <div class="modal-head"><h3>${t('add_transaction_title')}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        <div class="modal-scroll" style="overflow-y:auto;flex:1 1 auto;min-height:0;">
+          <div class="type-toggle">
+            <button class="expense ${d.type==='expense'?'active':''}" data-txtype="expense">${t('expenses')}</button>
+            <button class="income ${d.type==='income'?'active':''}" data-txtype="income">${t('income')}</button>
+          </div>
+          <div style="text-align:center;padding:10px 0;">
+            <span style="font-size:22px;font-weight:700;color:var(--text2);">${CURRENCIES[STATE.profile.currency]}</span>
+            <input class="amount-input" id="txn-amount" style="width:auto;display:inline-block;" inputmode="decimal" placeholder="0.00" value="${d.amount||''}">
+          </div>
+          ${d.type==='expense' ? `
+          <div class="field-label">${t('category_label')}</div>
+          <div class="cat-grid">
+            ${STATE.categories.map(c=>`<button class="cat-pick ${d.category===c.id?'selected':''}" data-cat="${c.id}">
+              <div class="cat-icon" style="background:${c.bg}">${c.icon}</div><span>${categoryLabel(c)}</span>
+            </button>`).join('')}
+          </div>` : ''}
+          <div class="field-label">${t('note_optional')}</div>
+          <input class="field-input" id="txn-note" placeholder="e.g. Grocery run" value="${d.note||''}">
+          <div class="field-label">${t('date_label')}</div>
+          <input class="field-input" id="txn-date" type="date" value="${d.date||todayISO()}">
+        </div>
+        <button class="btn-primary" style="max-width:none;margin:14px 0 calc(14px + env(safe-area-inset-bottom));flex-shrink:0;" id="txn-save">${t('save_transaction_btn')}</button>
+      </div>
+    `;
+  } else if(type==='edit-budget'){
+    const c = catById(STATE.modal.catId);
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${t('edit_budget_title')} — ${categoryLabel(c)}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        <div style="text-align:center;padding:10px 0;">
+          <span style="font-size:22px;font-weight:700;color:var(--text2);">${CURRENCIES[STATE.profile.currency]}</span>
+          <input class="amount-input" id="budget-amount" style="width:auto;display:inline-block;" inputmode="decimal" value="${STATE.budgets[c.id]||0}">
+        </div>
+        <button class="btn-primary" style="max-width:none;margin-top:14px;" id="budget-save">${t('save_limit_btn')}</button>
+      </div>
+    `;
+  } else if(type==='add-loan'){
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${t('add_loan_title')}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        <div class="field-label">${t('loan_name_field')}</div>
+        <input class="field-input" id="loan-name" placeholder="e.g. Car loan, Home loan">
+        <div class="field-label">${t('total_loan_amount')}</div>
+        <input class="field-input" id="loan-total" inputmode="decimal" placeholder="0.00">
+        <div class="field-label">${t('already_paid')}</div>
+        <input class="field-input" id="loan-paid" inputmode="decimal" placeholder="0.00">
+        <div class="field-label">${t('monthly_emi')}</div>
+        <input class="field-input" id="loan-emi" inputmode="decimal" placeholder="0.00">
+        <button class="btn-primary" style="max-width:none;margin-top:20px;" id="loan-save">${t('save_loan_btn')}</button>
+      </div>
+    `;
+  } else if(type==='manage-categories'){
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${t('manage_categories_title')}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        ${STATE.categories.map(c=>`
+          <div class="setting-row" style="border-bottom:1px solid var(--line);">
+            <div class="s-icon" style="background:${c.bg};">${c.icon}</div>
+            <div class="s-label">${categoryLabel(c)}</div>
+            <button class="txn-del" data-delcat="${c.id}" title="Delete category">${icon('trash','icon-sm')}</button>
+          </div>
+        `).join('')}
+        <button class="btn-primary" style="max-width:none;margin-top:18px;" id="btn-open-addcat">${icon('plus','icon-sm')} ${t('add_category_btn')}</button>
+      </div>
+    `;
+  } else if(type==='add-category'){
+    const selColor = STATE.modal.color || CATEGORY_COLORS[0];
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${t('add_category_title')}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        <div class="field-label">${t('name_field')}</div>
+        <input class="field-input" id="cat-name" placeholder="e.g. Education, Pets, Travel">
+        <div class="field-label">${t('icon_emoji')}</div>
+        <input class="field-input" id="cat-icon" placeholder="🎓" maxlength="4" style="text-align:center;font-size:20px;">
+        <div class="field-label">${t('color_label')}</div>
+        <div class="swatch-row">
+          ${CATEGORY_COLORS.map(col=>`<button class="swatch ${selColor===col?'selected':''}" data-swatch="${col}" style="background:${col};"></button>`).join('')}
+        </div>
+        <button class="btn-primary" style="max-width:none;margin-top:20px;" id="cat-save">${t('save_category_btn')}</button>
+      </div>
+    `;
+  } else if(type==='currency'){
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${t('choose_currency')}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        ${Object.keys(CURRENCIES).map(k=>`<button class="setting-row" data-setcurrency="${k}"><div class="s-icon">${CURRENCIES[k].trim()}</div><div class="s-label">${k}</div>${STATE.profile.currency===k?icon('check','icon-sm'):''}</button>`).join('')}
+      </div>
+    `;
+  } else if(type==='language'){
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${t('choose_language')}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        ${Object.keys(LANGUAGES).map(k=>`<button class="setting-row" data-setlang="${k}"><div class="s-label" style="flex:1;">${LANGUAGES[k].name}</div>${STATE.lang===k?icon('check','icon-sm'):''}</button>`).join('')}
+      </div>
+    `;
+  } else if(type==='about'){
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${t('about_title')}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        <div class="brandmark" style="margin:0 auto 16px;">${brandmarkSVG()}</div>
+        <p style="text-align:center;color:var(--text2);font-size:13.5px;line-height:1.6;">${t('app_name')} v1.0<br>${t('ob_tagline')}</p>
+        <p style="text-align:center;color:var(--text2);font-size:12.5px;font-weight:700;margin-top:14px;">${t('created_by')} Asrar Ahmed Junedi</p>
+        <p style="text-align:center;color:var(--text2);font-size:10.5px;margin-top:6px;opacity:.6;">Build ${APP_BUILD}</p>
+      </div>
+    `;
+  } else if(type==='info'){
+    overlay.innerHTML = `
+      <div class="modal-sheet">
+        <div class="modal-head"><h3>${STATE.modal.title}</h3><button id="modal-close">${icon('close','icon-sm')}</button></div>
+        <p style="color:var(--text2);font-size:14px;line-height:1.6;">${STATE.modal.body}</p>
+      </div>
+    `;
+  }
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',(e)=>{ if(e.target===overlay) closeModal(); });
+  attachModalEvents(type);
+  attachViewportHandler();
+  positionModalForViewport();
+}
+function positionModalForViewport(){
+  const overlay = document.getElementById('modal-overlay');
+  if(!overlay) return;
+  const sheet = overlay.querySelector('.modal-sheet');
+  if(window.visualViewport){
+    const vv = window.visualViewport;
+    overlay.style.position = 'fixed';
+    overlay.style.left = vv.offsetLeft+'px';
+    overlay.style.top = vv.offsetTop+'px';
+    overlay.style.width = vv.width+'px';
+    overlay.style.height = vv.height+'px';
+    if(sheet) sheet.style.maxHeight = Math.round(vv.height*0.92)+'px';
+  } else if(sheet){
+    sheet.style.maxHeight = '88vh';
+  }
+}
+let vvHandlerAttached = false;
+function attachViewportHandler(){
+  if(!window.visualViewport || vvHandlerAttached) return;
+  window.visualViewport.addEventListener('resize', positionModalForViewport);
+  window.visualViewport.addEventListener('scroll', positionModalForViewport);
+  vvHandlerAttached = true;
+}
+function detachViewportHandler(){
+  if(!window.visualViewport || !vvHandlerAttached) return;
+  window.visualViewport.removeEventListener('resize', positionModalForViewport);
+  window.visualViewport.removeEventListener('scroll', positionModalForViewport);
+  vvHandlerAttached = false;
+}
+function closeModal(){
+  const el = document.getElementById('modal-overlay');
+  if(el) el.remove();
+  STATE.modal = null;
+  detachViewportHandler();
+}
+function openModal(type,extra){
+  STATE.modal = Object.assign({type},extra||{});
+  renderModal();
+}
+function attachModalEvents(type){
+  const closeBtn = document.getElementById('modal-close');
+  if(closeBtn) closeBtn.onclick = closeModal;
+
+  if(type==='add-transaction'){
+    function captureFieldsIntoModalData(){
+      const amountEl = document.getElementById('txn-amount');
+      const noteEl = document.getElementById('txn-note');
+      const dateEl = document.getElementById('txn-date');
+      if(amountEl) STATE.modal.data.amount = amountEl.value;
+      if(noteEl) STATE.modal.data.note = noteEl.value;
+      if(dateEl) STATE.modal.data.date = dateEl.value;
+    }
+    document.querySelectorAll('[data-txtype]').forEach(b=>{
+      b.onclick=()=>{
+        captureFieldsIntoModalData();
+        STATE.modal.data.type = b.dataset.txtype;
+        renderModal();
+      };
+    });
+    document.querySelectorAll('[data-cat]').forEach(b=>{
+      b.onclick=()=>{
+        captureFieldsIntoModalData();
+        STATE.modal.data.category = b.dataset.cat;
+        renderModal();
+      };
+    });
+    const save = document.getElementById('txn-save');
+    if(save) save.onclick=()=>{
+      try{
+        if(!STATE.modal || !STATE.modal.data){ toast(t('reset_try_again')); closeModal(); return; }
+        const amountEl = document.getElementById('txn-amount');
+        const cleaned = (amountEl.value||'').replace(/[^0-9.]/g,'');
+        const amount = parseFloat(cleaned);
+        if(!amount || isNaN(amount) || amount<=0){ amountEl.focus(); toast(t('enter_valid_amount')); return; }
+        const type = STATE.modal.data.type;
+        const category = type==='income' ? 'income' : (STATE.modal.data.category||'other');
+        const note = document.getElementById('txn-note').value.trim();
+        const date = document.getElementById('txn-date').value || todayISO();
+        STATE.transactions.push({ id:uid(), type, amount, category, note, date, createdAt:Date.now() });
+        saveTransactions();
+        closeModal();
+        render();
+        toast(t('transaction_added'));
+      }catch(err){
+        console.error('Failed to save transaction', err);
+        toast(t('something_wrong_saving'));
+      }
+    };
+  } else if(type==='edit-budget'){
+    const save = document.getElementById('budget-save');
+    if(save) save.onclick=()=>{
+      const val = parseFloat(document.getElementById('budget-amount').value)||0;
+      STATE.budgets[STATE.modal.catId]=val;
+      saveBudgets();
+      closeModal();
+      render();
+      toast(t('budget_updated'));
+    };
+  } else if(type==='add-loan'){
+    const save = document.getElementById('loan-save');
+    if(save) save.onclick=()=>{
+      const name = document.getElementById('loan-name').value.trim();
+      const total = parseFloat(document.getElementById('loan-total').value)||0;
+      const paidSoFar = parseFloat(document.getElementById('loan-paid').value)||0;
+      const emi = parseFloat(document.getElementById('loan-emi').value)||0;
+      if(!name || total<=0 || emi<=0){ toast(t('fill_loan_fields')); return; }
+      STATE.loans.push({ id:uid(), name, total, remaining:Math.max(0,total-paidSoFar), emi, lastPaidMonth:null, createdAt:Date.now() });
+      saveLoans();
+      closeModal();
+      render();
+      toast(t('loan_added'));
+    };
+  } else if(type==='manage-categories'){
+    document.querySelectorAll('[data-delcat]').forEach(b=>{
+      b.onclick=()=>{
+        const id = b.dataset.delcat;
+        if(STATE.categories.length<=1){ toast(t('need_one_category')); return; }
+        if(!confirm(t('confirm_delete_category'))) return;
+        STATE.categories = STATE.categories.filter(c=>c.id!==id);
+        delete STATE.budgets[id];
+        saveCategories(); saveBudgets();
+        renderModal();
+        render();
+        toast(t('category_deleted'));
+      };
+    });
+    const openAdd = document.getElementById('btn-open-addcat');
+    if(openAdd) openAdd.onclick=()=>{ closeModal(); openModal('add-category',{returnTo:'manage-categories'}); };
+  } else if(type==='add-category'){
+    document.querySelectorAll('[data-swatch]').forEach(b=>{
+      b.onclick=()=>{ STATE.modal.color = b.dataset.swatch; renderModal(); };
+    });
+    const save = document.getElementById('cat-save');
+    if(save) save.onclick=()=>{
+      const name = document.getElementById('cat-name').value.trim();
+      const emoji = document.getElementById('cat-icon').value.trim() || '🏷️';
+      const color = STATE.modal.color || CATEGORY_COLORS[0];
+      if(!name){ toast(t('enter_category_name')); return; }
+      const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'') || uid();
+      if(STATE.categories.some(c=>c.id===id)){ toast(t('category_exists')); return; }
+      STATE.categories.push({ id, label:name, icon:emoji, color, bg:hexToLightBg(color) });
+      STATE.budgets[id] = 0;
+      saveCategories(); saveBudgets();
+      const returnTo = STATE.modal && STATE.modal.returnTo;
+      closeModal();
+      if(returnTo==='manage-categories') openModal('manage-categories');
+      else render();
+      toast(t('category_added'));
+    };
+  } else if(type==='currency'){
+    document.querySelectorAll('[data-setcurrency]').forEach(b=>{
+      b.onclick=()=>{ STATE.profile.currency=b.dataset.setcurrency; saveProfile(); closeModal(); render(); };
+    });
+  } else if(type==='language'){
+    document.querySelectorAll('[data-setlang]').forEach(b=>{
+      b.onclick=()=>{ STATE.lang=b.dataset.setlang; saveLang(); applyDirection(); closeModal(); render(); };
+    });
+  }
+}
+
+/* ===================== TOAST ===================== */
+function toast(msg){
+  const el = document.createElement('div');
+  el.className='toast'; el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),2200);
+}
+
+/* ===================== CSV EXPORT ===================== */
+function exportCSV(){
+  const rows = [['Date','Type','Category','Note','Amount']];
+  STATE.transactions.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(t=>{
+    rows.push([t.date,t.type,catById(t.category).label,(t.note||'').replace(/,/g,' '),t.amount]);
+  });
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download='saving-spending-export.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ===================== SHELL EVENTS ===================== */
+function attachShellEvents(){
+  document.querySelectorAll('[data-route]').forEach(el=>{
+    el.onclick=()=>{ STATE.route = el.dataset.route; render(); window.scrollTo(0,0); };
+  });
+  const fab = document.getElementById('btn-fab');
+  if(fab) fab.onclick=()=> openModal('add-transaction',{data:{type:'expense',date:todayISO()}});
+  const fabD = document.getElementById('btn-add-desktop');
+  if(fabD) fabD.onclick=()=> openModal('add-transaction',{data:{type:'expense',date:todayISO()}});
+  const bell = document.getElementById('btn-bell');
+  if(bell) bell.onclick=()=> openModal('info',{title:'Notifications', body:'You have no new notifications. Turn on reminders in More → Notifications to get daily spending nudges.'});
+  const bannerClose = document.getElementById('banner-close');
+  if(bannerClose) bannerClose.onclick=()=>{ STATE.bannerDismissed=true; render(); };
+  document.querySelectorAll('[data-dashtab]').forEach(el=>{
+    el.onclick=()=>{ STATE.dashTab=el.dataset.dashtab; render(); };
+  });
+  const balEdit = document.getElementById('balance-edit');
+  if(balEdit) balEdit.onclick=()=> openModal('add-transaction',{data:{type: STATE.dashTab==='income'?'income':'expense', date:todayISO()}});
+
+  // Transactions
+  document.querySelectorAll('[data-txtab]').forEach(el=>{
+    el.onclick=()=>{ STATE.txTab=el.dataset.txtab; render(); };
+  });
+  document.querySelectorAll('[data-del]').forEach(el=>{
+    el.onclick=()=>{
+      STATE.transactions = STATE.transactions.filter(t=>t.id!==el.dataset.del);
+      saveTransactions(); render(); toast(t('transaction_deleted'));
+    };
+  });
+
+  // Budget
+  document.querySelectorAll('[data-monthnav]').forEach(el=>{
+    el.onclick=()=>{
+      let m = STATE.budgetMonth + parseInt(el.dataset.monthnav,10);
+      let y = STATE.budgetYear;
+      if(m<0){ m=11; y--; } if(m>11){ m=0; y++; }
+      STATE.budgetMonth=m; STATE.budgetYear=y; render();
+    };
+  });
+  document.querySelectorAll('[data-editbudget]').forEach(el=>{
+    el.onclick=()=> openModal('edit-budget',{catId:el.dataset.editbudget});
+  });
+  const addLoanBtn = document.getElementById('btn-add-loan');
+  if(addLoanBtn) addLoanBtn.onclick=()=> openModal('add-loan');
+  document.querySelectorAll('[data-payloan]').forEach(el=>{
+    el.onclick=()=>{
+      const loan = STATE.loans.find(l=>l.id===el.dataset.payloan);
+      if(!loan) return;
+      const ym = todayISO().slice(0,7);
+      if(loan.lastPaidMonth===ym) return;
+      const payAmount = Math.min(loan.emi, loan.remaining);
+      loan.remaining = Math.max(0, loan.remaining - payAmount);
+      loan.lastPaidMonth = ym;
+      STATE.transactions.push({ id:uid(), type:'expense', category:'loan', amount:payAmount, note:loan.name+' EMI', date:todayISO(), createdAt:Date.now() });
+      saveLoans(); saveTransactions(); render();
+      toast(t('paid_for')+' '+new Date().toLocaleDateString(undefined,{month:'long',year:'numeric'}));
+    };
+  });
+  document.querySelectorAll('[data-delloan]').forEach(el=>{
+    el.onclick=()=>{
+      STATE.loans = STATE.loans.filter(l=>l.id!==el.dataset.delloan);
+      saveLoans(); render(); toast(t('loan_removed'));
+    };
+  });
+
+  // Reports
+  document.querySelectorAll('[data-report-range]').forEach(el=>{
+    el.onclick=()=>{ STATE.reportRange=el.dataset.reportRange; render(); };
+  });
+  const exportBtn = document.getElementById('btn-export');
+  if(exportBtn) exportBtn.onclick = exportCSV;
+
+  // More
+  document.querySelectorAll('[data-more]').forEach(el=>{
+    el.onclick=()=>{
+      const key = el.dataset.more;
+      if(key==='language') openModal('language');
+      else if(key==='currency') openModal('currency');
+      else if(key==='about') openModal('about');
+      else if(key==='categories') openModal('manage-categories');
+      else if(key==='backup') { exportCSV(); toast(t('backup_exported')); }
+      else if(key==='notif'){ STATE.profile.notifications=!STATE.profile.notifications; saveProfile(); render(); }
+      else if(key==='logout'){
+        if(confirm(t('confirm_logout'))){
+          try{ storageDelete('profile'); }catch(e){}
+          STATE.profile=null; STATE.ob={step:0,gender:null,name:''}; STATE.route='onboarding';
+          render();
+        }
+      }
+    };
+  });
+}
+
+/* ===================== INIT ===================== */
+/* ===================== DIAGNOSTICS ===================== */
+/* Surfaces any unexpected error as a visible message instead of the app just
+   sitting there doing nothing — so if something breaks on a specific device,
+   we can see exactly what and where. */
+const APP_BUILD = '2026-11-04.1-modalfix';
+window.addEventListener('error', function(e){
+  console.error('App error:', e.error || e.message);
+  showErrorBanner((e.error && e.error.message) || e.message || 'Unknown error');
+});
+window.addEventListener('unhandledrejection', function(e){
+  console.error('Unhandled promise rejection:', e.reason);
+  showErrorBanner((e.reason && e.reason.message) || String(e.reason) || 'Unknown error');
+});
+function showErrorBanner(msg){
+  let el = document.getElementById('err-banner');
+  if(!el){
+    el = document.createElement('div');
+    el.id='err-banner';
+    el.style.cssText='position:fixed;top:0;left:0;right:0;background:#FF6B6B;color:#fff;font-family:sans-serif;font-size:12.5px;font-weight:700;padding:10px 14px;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.2);';
+    document.body.appendChild(el);
+  }
+  el.textContent = '⚠ App error (build '+APP_BUILD+'): '+msg+' — tap to dismiss';
+  el.onclick = ()=> el.remove();
+}
+
+loadState();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(err=> console.error('SW registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
